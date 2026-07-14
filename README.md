@@ -62,6 +62,8 @@ Configuration priority is: built-in defaults, config file, then `XSEARCH_*` envi
 ~/.agents/skills/xsearch/bin/xsearch "What happened today? Include sources." 3
 ```
 
+A terminal shows a short aligned receipt. Scripts and Agents receive the same receipt as JSON; use `--json` to force it explicitly.
+
 On Windows:
 
 ```powershell
@@ -74,6 +76,8 @@ On Windows:
 - Splits the request into exactly `Q` distinct sub-questions.
 - Runs sub-searches concurrently through the configured model endpoint.
 - Preserves upstream search sources when the endpoint returns them.
+- Stores complete results as private local artifacts instead of flooding Agent context.
+- Returns a small receipt pointing to a manifest and per-item result files.
 - Filters uncited candidates and deduplicates URLs.
 - Separates transport success from result quality with `info_status`.
 - Supports multi-angle Agent workflows through [`SKILL.md`](./SKILL.md).
@@ -85,27 +89,33 @@ The hard output invariant is:
 requested_max_query_plan == actual_sub_queries == items.length
 ```
 
-Successful stdout is one `xsearch.retrieval.v1` JSON document:
+## Context-efficient results
+
+Default stdout is a small `xsearch.run.v1` receipt:
 
 ```json
 {
-  "structured": {
-    "schema": "xsearch.retrieval.v1",
-    "items": [],
-    "deduped_urls": [],
-    "info_status_counts": {
-      "ok": 0,
-      "empty": 0,
-      "refused": 0,
-      "thin": 0
-    }
-  },
-  "metadata": {
-    "requested_max_query_plan": 3,
-    "actual_sub_queries": 3
-  }
+  "schema": "xsearch.run.v1",
+  "run_id": "20260714T120000.000Z-1234",
+  "manifest_path": "/home/user/.cache/xsearch/runs/.../manifest.json",
+  "report_path": "/home/user/.cache/xsearch/runs/.../report.json",
+  "item_count": 3,
+  "source_count": 12,
+  "next_action": "Read manifest_path, then read only the item_path files needed for the answer."
 }
 ```
+
+Artifacts are stored with private permissions:
+
+```text
+~/.cache/xsearch/runs/<run-id>/
+  manifest.json       item index and selection metadata
+  items/001.json      one complete sub-search result
+  items/002.json
+  report.json         complete xsearch.retrieval.v1 result
+```
+
+Agents should read the manifest first and load only relevant item files. No evidence is truncated; the filesystem acts as external working memory. Use `--full` only when intentionally sending the complete report to stdout. Set `XSEARCH_ARTIFACT_DIR` to move the artifact store.
 
 `success` reports whether an upstream call completed. `info_status` reports whether its body was useful; these are intentionally separate.
 

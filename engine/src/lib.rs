@@ -1,6 +1,7 @@
 //! Deep module: one-shot structured search for the xsearch skill.
 //! External seam: [`run_search`]. Sole injectable port: [`ChatUpstream`].
 
+mod artifact;
 mod assemble;
 pub mod config;
 mod error;
@@ -11,6 +12,7 @@ mod split;
 pub mod types;
 pub mod upstream;
 
+pub use artifact::{default_artifact_root, persist_report, RunReceipt};
 pub use config::{load_resolved, ResolvedConfig};
 pub use error::{SearchError, UpstreamError};
 pub use types::{EngineOptions, InfoStatus, Report, SearchRequest, StructuredV1};

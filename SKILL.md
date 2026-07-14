@@ -12,12 +12,13 @@ Execution is a **skill-local one-shot binary** (no MCP, no search daemon).
 ## Binary
 
 ```bash
-"${XSEARCH_BIN:-$HOME/.agents/skills/xsearch/bin/xsearch}" "<query>" [Q]
+"${XSEARCH_BIN:-$HOME/.agents/skills/xsearch/bin/xsearch}" --json "<query>" [Q]
 ```
 
 - Pass `Q` when plan size matters (default **5**).
-- **Stdout**: pretty JSON `{ "structured": xsearch.retrieval.v1, "metadata": … }`.
-- **Stderr**: errors/diagnostics. Exit `0` only when stdout JSON is complete.
+- **Stdout**: a small `xsearch.run.v1` receipt with `manifest_path` and `report_path`.
+- Full results: private local artifacts; use `--full` only for explicit debugging.
+- **Stderr**: errors/diagnostics. Exit `0` only when the receipt and artifacts are complete.
 - Build source: `engine/`; run `scripts/install.sh` after cloning.
 
 ### Config (defaults < file < env)
@@ -32,13 +33,21 @@ Example: `config.example.toml`.
 | `model` / `XSEARCH_MODEL` | no | default `grok-4.3-fast` |
 | `analysis_model` / `XSEARCH_ANALYSIS_MODEL` | no | defaults to search model |
 | `timeout_secs` / `XSEARCH_TIMEOUT` | no | seconds (default 600) |
-| `log_dir` / `XSEARCH_LOG_DIR` | no | one JSON log per successful run |
+| `XSEARCH_ARTIFACT_DIR` | no | root for receipt artifacts; defaults to the user cache directory |
+| `log_dir` / `XSEARCH_LOG_DIR` | no | compatibility override for the artifact root |
 
 Env overrides file for the same field. On binary failure: report stderr; do not invent results.
 
-### Structured output
+### Artifact output
 
-- `structured.schema` = `xsearch.retrieval.v1`
+The receipt points to:
+
+- `manifest.json`: item index with sub-question, status, body size, URL count, and `item_path`.
+- `items/NNN.json`: one complete sub-search result per file.
+- `report.json`: complete `xsearch.retrieval.v1` report.
+
+The full report preserves:
+
 - `structured.items[]`: `index`, `sub_question`, `success`, `body`, `urls[]`, `info_status` (`ok|empty|refused|thin`), …
 - `structured.deduped_urls[]`: url, sources, first_rank, occurrence_count
 - `success` = upstream call ok; **`info_status` = body yield** (not truth)
@@ -75,10 +84,11 @@ Budget hints (not a program gate): floor ≥3×Q5; light 3×5; mid 3–4×5–10
 
 ### 3. Execute (one angle → one leaf)
 
-1. One angle → exactly one `bin/xsearch` (at most one follow-up). No nested fan-out.
-2. Let the model use any retrieval capabilities available upstream; native tools are optional implementation details.
-3. Read `structured` and per-item `info_status`. `success_count` alone is not “had useful info”.
-4. Return a **short note** to the parent — not full JSON.
+1. One angle → exactly one `bin/xsearch --json` (at most one follow-up). No nested fan-out.
+2. Read the receipt, then `manifest_path`; do not read `report_path` wholesale.
+3. Select item files by sub-question, `info_status`, body size, and URL count. Read only the `item_path` files needed for this angle.
+4. Let the model use any retrieval capabilities available upstream; native tools are optional implementation details.
+5. Return a **short note** to the parent — not artifact contents.
 
 | Field | Meaning |
 | --- | --- |
@@ -111,6 +121,6 @@ The binary enforces **count Q**, not semantic diversity.
 ## Guardrails
 
 - Never invent URLs.
-- Default: no full tool JSON / raw leaf bodies to the parent.
+- Default: receipt → manifest → selected item files. Never load `report.json` wholesale into the parent context.
 - No MCP client and no local search daemon required.
 - Logging only via `XSEARCH_LOG_DIR`; this skill does not own dogfood scoring.
