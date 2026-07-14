@@ -1,0 +1,43 @@
+README.zh-CN.md
+  s_1385d80c812a56::t_2fc24df2cb4f4f 3,5
+README.en.md
+  s_1385d80c812a56::t_1405149f95a96e 2-3
+  s_1385d80c812a56::t_765490747fd4a7 10
+  s_fa4f026a19b5f3::t_51ac566ef6e47f 1,4-9,11-100
+README.md
+  s_1385d80c812a56::t_f5b5a9885b0e4d 2-3
+  s_1385d80c812a56::t_efb7acf1e14d56 10
+  s_2335cac8158e1e::t_91c18418dcd700 8,12,18,20,22,29,36,42,44,46,49-50,54,56,62,71,73-75,77,82,98
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "42e509e4381437e58856a91a88973bcd4ad7d369",
+  "prompts": {},
+  "sessions": {
+    "s_1385d80c812a56": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f60d2-8492-7787-bc92-edfd523920f1",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "cat <git@chen.rs>"
+    },
+    "s_2335cac8158e1e": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f5f45-bbbc-768b-8a34-12786e9c542b",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "cat <git@chen.rs>"
+    },
+    "s_fa4f026a19b5f3": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f6125-5fd4-7cb7-9bd7-b238ccc564c5",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "cat <git@chen.rs>"
+    }
+  }
+}
