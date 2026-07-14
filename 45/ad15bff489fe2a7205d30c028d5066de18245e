@@ -1,0 +1,21 @@
+README.md
+  s_1385d80c812a56::t_d8f6c594d590a6 8-9
+README.en.md
+  s_1385d80c812a56::t_07a4ad0896e4a3 8-9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "45ad15bff489fe2a7205d30c028d5066de18245e",
+  "prompts": {},
+  "sessions": {
+    "s_1385d80c812a56": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f60d2-8492-7787-bc92-edfd523920f1",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "cat <git@chen.rs>"
+    }
+  }
+}
