@@ -1,0 +1,19 @@
+.github/workflows/ci.yml
+  s_1385d80c812a56::t_4e41b2bd877a7d 5-12,14-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "5966181834ef812d99269cf6c30b3a590a8e05ed",
+  "prompts": {},
+  "sessions": {
+    "s_1385d80c812a56": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f60d2-8492-7787-bc92-edfd523920f1",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "cat <git@chen.rs>"
+    }
+  }
+}
