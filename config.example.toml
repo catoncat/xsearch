@@ -1,0 +1,18 @@
+# Copy to ~/.config/xsearch/config.toml (optional).
+# Priority: built-in defaults < this file < environment variables.
+#
+#   mkdir -p ~/.config/xsearch
+#   cp config.example.toml ~/.config/xsearch/config.toml
+#   chmod 600 ~/.config/xsearch/config.toml   # if you put a key here
+#
+# Prefer XSEARCH_API_KEY in the environment over storing secrets in the file.
+
+api_url = "https://your-grok-proxy.example/v1"
+# api_key = ""
+
+model = "grok-4.3-fast"
+# analysis_model = "grok-4.3-fast"
+
+timeout_secs = 600
+# max_q = 100
+# log_dir = "/tmp/xsearch-logs"

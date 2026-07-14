@@ -1,0 +1,29 @@
+# Local credentials and configuration
+config.toml
+*.secret
+*credentials*
+.env
+.env.*
+
+# Rust
+engine/target/
+target/
+
+# Built binaries
+bin/xsearch
+bin/xsearch.exe
+
+# Search logs and runtime output
+outputs/
+logs/
+*.log
+
+# Agent/runtime artifacts
+.pi-subagents/
+.scratch/
+.ml-cache/
+
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/
