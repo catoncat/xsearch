@@ -17,7 +17,7 @@ jobs:
       run:
         working-directory: engine
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
@@ -27,3 +27,22 @@ jobs:
       - run: cargo fmt --check
       - run: cargo test --locked
       - run: cargo check --locked
+      - name: Validate Bash installers
+        if: runner.os != 'Windows'
+        run: bash -n ../install.sh ../scripts/install.sh ../scripts/test-installer.sh
+      - name: Validate PowerShell installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path ../install.ps1), [ref]$tokens, [ref]$errors) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_ }
+            exit 1
+          }
+      - name: Test binary installer
+        if: runner.os == 'Linux'
+        run: |
+          cargo build --locked --release
+          ../scripts/test-installer.sh

@@ -1,77 +1,91 @@
 # xsearch
 
-`xsearch` turns a configured OpenAI-compatible Grok model endpoint into a one-shot, structured search CLI and an Agent Skill.
+Turn a third-party OpenAI-compatible Grok model endpoint into a one-shot structured search CLI and Agent Skill.
 
-It is designed for third-party Grok model proxies. It does not require an official xAI API account or key. The upstream model/runtime may provide additional native retrieval capabilities; `xsearch` uses whatever retrieval behavior is available without making a specific internal tool part of its public contract.
-
-## What it does
-
-- Accepts a natural-language query and a requested query-plan size `Q`.
-- Splits the request into exactly `Q` distinct sub-questions.
-- Runs the sub-searches concurrently.
-- Preserves upstream search sources when the endpoint returns them.
-- Produces stable `xsearch.retrieval.v1` JSON with URLs, quality status, and metadata.
-- Supports multi-angle Agent workflows through [`SKILL.md`](./SKILL.md).
-- Runs as a one-shot process: no MCP server, daemon, or listening port.
-
-## Requirements
-
-- Rust toolchain for local installation.
-- An OpenAI-compatible endpoint serving a Grok model.
-- Endpoint credentials if required by that provider.
-
-`xsearch` does not provide an endpoint or credentials. Model IDs and retrieval behavior vary between proxy providers.
+No official xAI API account is required. `xsearch` uses the retrieval behavior available through your configured model proxy, splits research into an exact query plan, runs it concurrently, and returns stable JSON with sources and quality signals.
 
 ## Install
 
+### macOS and Linux
+
 ```bash
-git clone https://github.com/catoncat/xsearch.git
-cd xsearch
-./scripts/install.sh
+curl -fsSL https://raw.githubusercontent.com/catoncat/xsearch/main/install.sh | bash
 ```
 
-The installer builds the Rust binary and installs the skill under:
+### Windows PowerShell
 
-```text
-~/.agents/skills/xsearch/
+```powershell
+irm https://raw.githubusercontent.com/catoncat/xsearch/main/install.ps1 | iex
 ```
 
-Override the destination with `XSEARCH_INSTALL_DIR` or point the skill at another binary with `XSEARCH_BIN`.
+The installer detects the platform, downloads the latest prebuilt binary, verifies its SHA-256 checksum, and installs both the CLI and `SKILL.md` under `~/.agents/skills/xsearch`.
+
+Rust and Cargo are **not required** for installation.
+
+Supported release targets:
+
+- macOS: Apple Silicon and Intel
+- Linux: x86_64 and ARM64
+- Windows: x86_64
+
+Set `XSEARCH_INSTALL_DIR` to override the installation directory. Set `XSEARCH_VERSION`, for example `v0.1.1`, to install a specific release.
 
 ## Configure
 
-Configuration priority is: built-in defaults, config file, then environment variables.
+The installer creates this file on first install:
 
-```bash
-mkdir -p ~/.config/xsearch
-cp config.example.toml ~/.config/xsearch/config.toml
-chmod 600 ~/.config/xsearch/config.toml
+```text
+~/.config/xsearch/config.toml
 ```
 
-Edit the endpoint and model for your proxy. Prefer keeping credentials in the environment:
+Edit it for your third-party Grok model proxy:
+
+```toml
+api_url = "https://your-grok-proxy.example/v1"
+model = "grok-4.3-fast"
+```
+
+Prefer supplying credentials through the environment:
 
 ```bash
 export XSEARCH_API_KEY='your-provider-key'
 ```
 
-A file-only setup is also supported when needed:
+A file-based `api_key` is also supported. Keep the file private and never commit it.
 
-```toml
-api_url = "https://your-grok-proxy.example/v1"
-api_key = "your-provider-key"
-model = "grok-4.3-fast"
-```
+Configuration priority is: built-in defaults, config file, then `XSEARCH_*` environment variables.
 
-Never commit the real config file.
-
-## Use
+## Verify
 
 ```bash
-~/.agents/skills/xsearch/bin/xsearch \
-  "Compare the latest public evidence about topic A and topic B" 5
+~/.agents/skills/xsearch/bin/xsearch --version
+~/.agents/skills/xsearch/bin/xsearch "What happened today? Include sources." 3
 ```
 
-Successful stdout is one JSON document:
+On Windows:
+
+```powershell
+~\.agents\skills\xsearch\bin\xsearch.exe --version
+```
+
+## What it does
+
+- Accepts a natural-language query and requested query-plan size `Q`.
+- Splits the request into exactly `Q` distinct sub-questions.
+- Runs sub-searches concurrently through the configured model endpoint.
+- Preserves upstream search sources when the endpoint returns them.
+- Filters uncited candidates and deduplicates URLs.
+- Separates transport success from result quality with `info_status`.
+- Supports multi-angle Agent workflows through [`SKILL.md`](./SKILL.md).
+- Runs as a one-shot process: no MCP server, daemon, or listening port.
+
+The hard output invariant is:
+
+```text
+requested_max_query_plan == actual_sub_queries == items.length
+```
+
+Successful stdout is one `xsearch.retrieval.v1` JSON document:
 
 ```json
 {
@@ -87,35 +101,38 @@ Successful stdout is one JSON document:
     }
   },
   "metadata": {
-    "requested_max_query_plan": 5,
-    "actual_sub_queries": 5
+    "requested_max_query_plan": 3,
+    "actual_sub_queries": 3
   }
 }
 ```
 
-The hard count invariant is:
-
-```text
-requested_max_query_plan == actual_sub_queries == items.length
-```
-
 `success` reports whether an upstream call completed. `info_status` reports whether its body was useful; these are intentionally separate.
 
-## Development
+## Build from source
+
+Rust is only needed for development or unsupported platforms:
+
+```bash
+git clone https://github.com/catoncat/xsearch.git
+cd xsearch
+./scripts/install.sh
+```
+
+Development checks:
 
 ```bash
 cd engine
 cargo fmt --check
-cargo test
-cargo check
-cargo build --release
+cargo test --locked
+cargo check --locked
 ```
 
 No live endpoint is needed for unit tests. The engine uses an injectable in-memory upstream in tests.
 
 ## Security
 
-API URLs, keys, model names, and logs are local runtime configuration. See [`SECURITY.md`](./SECURITY.md) for reporting and credential-handling guidance.
+API URLs, keys, model names, and logs remain local runtime configuration. Release installers verify downloaded binaries against the published `checksums.txt`. See [`SECURITY.md`](./SECURITY.md) for reporting and credential-handling guidance.
 
 ## License
 

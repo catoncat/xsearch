@@ -9,9 +9,10 @@ config.toml
 engine/target/
 target/
 
-# Built binaries
+# Built binaries and release staging
 bin/xsearch
 bin/xsearch.exe
+dist/
 
 # Search logs and runtime output
 outputs/

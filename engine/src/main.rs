@@ -2,14 +2,18 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 use xsearch::{load_resolved, run_search, HttpChatUpstream, SearchRequest};
 
-fn usage() -> ! {
+fn print_usage() {
+    println!("usage: xsearch \"<query>\" [Q]");
+    println!();
+    println!("config (defaults < file < env):");
+    println!("  file: $XSEARCH_CONFIG or ~/.config/xsearch/config.toml|.json");
+    println!("  env:  XSEARCH_API_URL, XSEARCH_API_KEY, XSEARCH_MODEL,");
+    println!("        XSEARCH_ANALYSIS_MODEL, XSEARCH_TIMEOUT, XSEARCH_LOG_DIR");
+}
+
+fn usage_error() -> ! {
     eprintln!("usage: xsearch \"<query>\" [Q]");
-    eprintln!();
-    eprintln!("config (defaults < file < env):");
-    eprintln!("  file: $XSEARCH_CONFIG or ~/.config/xsearch/config.toml|.json");
-    eprintln!("  env:  XSEARCH_API_URL, XSEARCH_API_KEY, XSEARCH_MODEL,");
-    eprintln!("        XSEARCH_ANALYSIS_MODEL, XSEARCH_TIMEOUT, XSEARCH_LOG_DIR");
-    eprintln!("  example: vendor/skills/xsearch/config.example.toml");
+    eprintln!("try 'xsearch --help' for configuration options");
     std::process::exit(2);
 }
 
@@ -32,8 +36,16 @@ fn maybe_log(report_json: &str, log_dir: Option<&str>) {
 #[tokio::main]
 async fn main() -> ExitCode {
     let mut args = std::env::args().skip(1).collect::<Vec<_>>();
-    if args.is_empty() || args.iter().any(|a| a == "-h" || a == "--help") {
-        usage();
+    if args.is_empty() {
+        usage_error();
+    }
+    if args.len() == 1 && matches!(args[0].as_str(), "-h" | "--help") {
+        print_usage();
+        return ExitCode::SUCCESS;
+    }
+    if args.len() == 1 && matches!(args[0].as_str(), "-V" | "--version") {
+        println!("xsearch {}", env!("CARGO_PKG_VERSION"));
+        return ExitCode::SUCCESS;
     }
 
     let query = args.remove(0);
@@ -42,7 +54,7 @@ async fn main() -> ExitCode {
     } else {
         match args[0].parse() {
             Ok(n) => n,
-            Err(_) => usage(),
+            Err(_) => usage_error(),
         }
     };
 
