@@ -1,0 +1,42 @@
+.github/workflows/release.yml
+  s_1385d80c812a56::t_de619006f96ce4 1-83
+engine/src/main.rs
+  s_1385d80c812a56::t_ae523211ccf911 5-14,16,39-48,57
+engine/Cargo.toml
+  s_1385d80c812a56::t_087f6305015938 3
+README.md
+  s_1385d80c812a56::t_3c063dd211e8d3 3,5,7,9,11-13,15,17-19,21,23-33,35,38,41,43-46,48,51,54-58,61-62,65,67-68,71,73-80,82-85,88,104-105,110,112,114-120,122,127-128,135
+scripts/test-installer.sh
+  s_1385d80c812a56::t_4ef2b873bcdd86 1-5,7-46
+  s_1385d80c812a56::t_a59918e01d737e 6
+install.sh
+  s_1385d80c812a56::t_20297b625e4fb4 68-69
+  s_1385d80c812a56::t_2c390c0005698d 61
+  s_1385d80c812a56::t_eebfd8a16c3dc6 1-60,62-67,70,72-95
+  s_1385d80c812a56::t_5e4d4a8f8213d6 71
+.gitignore
+  s_1385d80c812a56::t_5db29b90d3ebb7 12,15
+install.ps1
+  s_1385d80c812a56::t_8f96b5cf305998 1-53
+.github/workflows/ci.yml
+  s_1385d80c812a56::t_43322d3871289d 20
+  s_1385d80c812a56::t_604d25d3115742 30-48
+engine/Cargo.lock
+  s_1385d80c812a56::t_74a0d3cd1f475e 1471
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "70489f6328fc6eb0454e6849a31ba1a582852223",
+  "prompts": {},
+  "sessions": {
+    "s_1385d80c812a56": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f60d2-8492-7787-bc92-edfd523920f1",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "cat <git@chen.rs>"
+    }
+  }
+}
