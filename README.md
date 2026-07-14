@@ -12,13 +12,26 @@ No official xAI API account is required. `xsearch` uses the retrieval behavior a
 npx skills add catoncat/xsearch
 ```
 
-The installer lets you choose the Agent and scope. For an unattended Pi install:
+The installer lets you choose any supported Agent and scope. For an unattended install across common coding agents:
 
 ```bash
-npx --yes skills add catoncat/xsearch --skill xsearch --agent pi --global --yes
+npx --yes skills add catoncat/xsearch --skill xsearch \
+  --agent claude-code codex cursor pi --global --yes
 ```
 
-`skills add` installs `SKILL.md`. On the first search, the skill checks for the native binary and automatically bootstraps the latest checksummed release when needed. The user does not need to run a second command.
+Choose only the Agent names you use; the skill itself is not tied to Pi.
+
+`skills add` installs `SKILL.md` into each selected Agent. On the first search, that Agent checks for the native binary and automatically runs the platform bootstrap when needed:
+
+```text
+SKILL.md installed by npx
+  -> binary missing?
+  -> install.sh or install.ps1
+  -> latest platform release + SHA-256 verification
+  -> continue the original search
+```
+
+The user does not need to run a second command.
 
 ### CLI only
 
