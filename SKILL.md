@@ -11,8 +11,17 @@ Execution is a **skill-local one-shot binary** (no MCP, no search daemon).
 
 ## Binary
 
+macOS/Linux:
+
 ```bash
 "${XSEARCH_BIN:-$HOME/.agents/skills/xsearch/bin/xsearch}" --json "<query>" [Q]
+```
+
+Windows PowerShell:
+
+```powershell
+$bin = if ($env:XSEARCH_BIN) { $env:XSEARCH_BIN } else { "$HOME\.agents\skills\xsearch\bin\xsearch.exe" }
+& $bin --json "<query>" [Q]
 ```
 
 - Pass `Q` when plan size matters (default **5**).
@@ -23,7 +32,7 @@ Execution is a **skill-local one-shot binary** (no MCP, no search daemon).
 
 ### Config (defaults < file < env)
 
-First file found: `$XSEARCH_CONFIG`, else `~/.config/xsearch/config.toml` or `config.json`.
+First file found: `$XSEARCH_CONFIG`; otherwise `$XDG_CONFIG_HOME/xsearch`, `~/.config/xsearch`, or `%APPDATA%\xsearch` on Windows.
 Example: `config.example.toml`.
 
 | Key / Env | Required | Meaning |

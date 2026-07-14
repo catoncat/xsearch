@@ -24,7 +24,7 @@ fn print_usage() {
     println!("  --full   print the complete retrieval report to stdout");
     println!();
     println!("config (defaults < file < env):");
-    println!("  file: $XSEARCH_CONFIG or ~/.config/xsearch/config.toml|.json");
+    println!("  file: $XSEARCH_CONFIG, ~/.config/xsearch, or %APPDATA%\\xsearch");
     println!("  env:  XSEARCH_API_URL, XSEARCH_API_KEY, XSEARCH_MODEL,");
     println!("        XSEARCH_ANALYSIS_MODEL, XSEARCH_TIMEOUT,");
     println!("        XSEARCH_ARTIFACT_DIR, XSEARCH_LOG_DIR");

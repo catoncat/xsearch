@@ -2,7 +2,13 @@ $ErrorActionPreference = "Stop"
 
 $Repo = if ($env:XSEARCH_REPO) { $env:XSEARCH_REPO } else { "catoncat/xsearch" }
 $Dest = if ($env:XSEARCH_INSTALL_DIR) { $env:XSEARCH_INSTALL_DIR } else { Join-Path $HOME ".agents\skills\xsearch" }
-$ConfigRoot = if ($env:XDG_CONFIG_HOME) { $env:XDG_CONFIG_HOME } else { Join-Path $HOME ".config" }
+$ConfigRoot = if ($env:XDG_CONFIG_HOME) {
+    $env:XDG_CONFIG_HOME
+} elseif ($env:APPDATA) {
+    $env:APPDATA
+} else {
+    Join-Path $HOME ".config"
+}
 $ConfigDir = Join-Path $ConfigRoot "xsearch"
 
 if ($env:PROCESSOR_ARCHITECTURE -ne "AMD64") {

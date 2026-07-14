@@ -32,10 +32,11 @@ Set `XSEARCH_INSTALL_DIR` to override the installation directory. Set `XSEARCH_V
 
 ## Configure
 
-The installer creates this file on first install:
+The installer creates a config file on first install:
 
 ```text
-~/.config/xsearch/config.toml
+macOS/Linux: ~/.config/xsearch/config.toml
+Windows:     %APPDATA%\xsearch\config.toml
 ```
 
 Edit it for your third-party Grok model proxy:
@@ -108,7 +109,9 @@ Default stdout is a small `xsearch.run.v1` receipt:
 Artifacts are stored with private permissions:
 
 ```text
-~/.cache/xsearch/runs/<run-id>/
+macOS/Linux: ~/.cache/xsearch/runs/<run-id>/
+Windows:     %LOCALAPPDATA%\xsearch\runs\<run-id>\
+
   manifest.json       item index and selection metadata
   items/001.json      one complete sub-search result
   items/002.json

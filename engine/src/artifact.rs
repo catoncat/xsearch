@@ -70,7 +70,14 @@ pub fn default_artifact_root() -> PathBuf {
     if let Some(path) = std::env::var_os("XDG_CACHE_HOME") {
         return PathBuf::from(path).join("xsearch/runs");
     }
+    #[cfg(windows)]
+    if let Some(path) = std::env::var_os("LOCALAPPDATA") {
+        return PathBuf::from(path).join("xsearch/runs");
+    }
     if let Some(home) = std::env::var_os("HOME") {
+        return PathBuf::from(home).join(".cache/xsearch/runs");
+    }
+    if let Some(home) = std::env::var_os("USERPROFILE") {
         return PathBuf::from(home).join(".cache/xsearch/runs");
     }
     std::env::temp_dir().join("xsearch/runs")
@@ -235,5 +242,19 @@ mod tests {
         assert!(!manifest.contains(&body));
 
         fs::remove_dir_all(root).unwrap();
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn default_root_uses_local_appdata_on_windows() {
+        let local = std::env::temp_dir().join("xsearch-localappdata-test");
+        std::env::remove_var("XSEARCH_ARTIFACT_DIR");
+        std::env::remove_var("XSEARCH_LOG_DIR");
+        std::env::remove_var("XDG_CACHE_HOME");
+        std::env::set_var("LOCALAPPDATA", &local);
+
+        assert_eq!(default_artifact_root(), local.join("xsearch/runs"));
+
+        std::env::remove_var("LOCALAPPDATA");
     }
 }

@@ -3,6 +3,7 @@
 //! File (first found):
 //! - `$XSEARCH_CONFIG`
 //! - `$XDG_CONFIG_HOME/xsearch/config.toml` (or `~/.config/xsearch/config.toml`)
+//! - `%APPDATA%\\xsearch\\config.toml` on Windows
 //! - same paths with `.json`
 //!
 //! Env always wins over file for the same key.
@@ -10,7 +11,7 @@
 use crate::types::EngineOptions;
 use serde::Deserialize;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(default)]
@@ -32,7 +33,7 @@ struct FileConfig {
 }
 
 /// Fully resolved settings for the CLI (and tests that want file/env behavior).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ResolvedConfig {
     pub api_url: Option<String>,
     pub api_key: Option<String>,
@@ -42,37 +43,39 @@ pub struct ResolvedConfig {
     pub loaded_file: Option<PathBuf>,
 }
 
-impl Default for ResolvedConfig {
-    fn default() -> Self {
-        Self {
-            api_url: None,
-            api_key: None,
-            options: EngineOptions::default(),
-            log_dir: None,
-            loaded_file: None,
+fn push_config_dir(paths: &mut Vec<PathBuf>, base: PathBuf) {
+    let dir = base.join("xsearch");
+    for name in ["config.toml", "config.json"] {
+        let candidate = dir.join(name);
+        if !paths.contains(&candidate) {
+            paths.push(candidate);
         }
     }
 }
 
 fn config_candidates() -> Vec<PathBuf> {
     let mut paths = Vec::new();
-    if let Ok(p) = std::env::var("XSEARCH_CONFIG") {
-        if !p.is_empty() {
-            paths.push(PathBuf::from(p));
+    if let Ok(path) = std::env::var("XSEARCH_CONFIG") {
+        if !path.is_empty() {
+            paths.push(PathBuf::from(path));
         }
     }
-    let base = std::env::var_os("XDG_CONFIG_HOME")
-        .map(PathBuf::from)
-        .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".config")));
-    if let Some(base) = base {
-        let dir = base.join("xsearch");
-        paths.push(dir.join("config.toml"));
-        paths.push(dir.join("config.json"));
+    if let Some(base) = std::env::var_os("XDG_CONFIG_HOME") {
+        push_config_dir(&mut paths, PathBuf::from(base));
+    }
+    #[cfg(windows)]
+    if let Some(base) = std::env::var_os("APPDATA") {
+        push_config_dir(&mut paths, PathBuf::from(base));
+    }
+    if let Some(home) = std::env::var_os("HOME") {
+        push_config_dir(&mut paths, PathBuf::from(home).join(".config"));
+    } else if let Some(home) = std::env::var_os("USERPROFILE") {
+        push_config_dir(&mut paths, PathBuf::from(home).join(".config"));
     }
     paths
 }
 
-fn parse_file(path: &PathBuf, raw: &str) -> Result<FileConfig, String> {
+fn parse_file(path: &Path, raw: &str) -> Result<FileConfig, String> {
     let ext = path
         .extension()
         .and_then(|e| e.to_str())
@@ -188,7 +191,7 @@ impl ResolvedConfig {
         for p in config_candidates() {
             msg.push_str(&format!("    - {}\n", p.display()));
         }
-        msg.push_str("  see vendor/skills/xsearch/config.example.toml");
+        msg.push_str("  see the installed config.example.toml");
         Err(msg)
     }
 }
@@ -265,5 +268,21 @@ timeout_secs = 99
         std::env::remove_var("XSEARCH_CONFIG");
         std::env::remove_var("XSEARCH_MODEL");
         let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn windows_candidates_include_appdata() {
+        let _guard = ENV_LOCK.lock().unwrap();
+        let appdata = std::env::temp_dir().join("xsearch-appdata-test");
+        std::env::remove_var("XSEARCH_CONFIG");
+        std::env::remove_var("XDG_CONFIG_HOME");
+        std::env::set_var("APPDATA", &appdata);
+
+        let candidates = config_candidates();
+        assert!(candidates.contains(&appdata.join("xsearch/config.toml")));
+        assert!(candidates.contains(&appdata.join("xsearch/config.json")));
+
+        std::env::remove_var("APPDATA");
     }
 }
