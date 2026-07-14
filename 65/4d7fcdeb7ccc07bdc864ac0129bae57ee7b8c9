@@ -1,0 +1,80 @@
+SKILL.md
+  s_1385d80c812a56::t_68e71b3546da2b 25
+  s_1cd16e5b4cbba1::t_16a3488cc374ce 1-24,26-116
+.github/workflows/ci.yml
+  s_60b745a29a8126::t_e4bcad1c11972e 1-29
+.gitignore
+  s_60b745a29a8126::t_d978e49aff26ba 1-29
+LICENSE
+  s_60b745a29a8126::t_a05ba4e4065f5e 1-21
+README.md
+  s_60b745a29a8126::t_ee15c758760168 1-122
+SECURITY.md
+  s_60b745a29a8126::t_ca22a783949c40 1-16
+config.example.toml
+  s_60b745a29a8126::t_2c3afc86f2c22e 1-18
+engine/Cargo.lock
+  s_1385d80c812a56::t_811110fa3c975e 1-1573
+engine/Cargo.toml
+  s_60b745a29a8126::t_0ba5711ddf4131 1-30
+engine/src/assemble.rs
+  s_1385d80c812a56::t_7cc815ce591bb9 1-176
+engine/src/config.rs
+  s_1385d80c812a56::t_49896a646d2e63 1-269
+engine/src/error.rs
+  s_1385d80c812a56::t_5267e4090f9156 1-33
+engine/src/extract.rs
+  s_1385d80c812a56::t_739e649a4e4291 1-51
+engine/src/lib.rs
+  s_1385d80c812a56::t_27e22fd62e40da 1-244
+engine/src/main.rs
+  s_1385d80c812a56::t_c831afa1b068b8 1-103
+engine/src/quality.rs
+  s_1385d80c812a56::t_f403176e45b6dc 1-73
+engine/src/search.rs
+  s_1385d80c812a56::t_5aac1134ac2fb2 1-64
+engine/src/split.rs
+  s_1385d80c812a56::t_29380fbbfa2a3e 1-266
+engine/src/types.rs
+  s_1385d80c812a56::t_f9f38e03157699 1-111
+engine/src/upstream/http.rs
+  s_1385d80c812a56::t_cce0e13ebb6e7e 1-134
+engine/src/upstream/memory.rs
+  s_1385d80c812a56::t_94323949751a23 1-77
+engine/src/upstream/mod.rs
+  s_1385d80c812a56::t_b22706dbcedaf1 1-50
+scripts/install.sh
+  s_1385d80c812a56::t_523929a9344f19 1-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "654d7fcdeb7ccc07bdc864ac0129bae57ee7b8c9",
+  "prompts": {},
+  "sessions": {
+    "s_1385d80c812a56": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f60d2-8492-7787-bc92-edfd523920f1",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "cat <git@chen.rs>"
+    },
+    "s_1cd16e5b4cbba1": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f60b6-0572-7210-9777-f48065e60ad7",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "cat <git@chen.rs>"
+    },
+    "s_60b745a29a8126": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f6111-1fb3-72c6-8183-86b194ccab74",
+        "model": "grok-4.5"
+      },
+      "human_author": "cat <git@chen.rs>"
+    }
+  }
+}
