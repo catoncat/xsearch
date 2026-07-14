@@ -88,70 +88,113 @@ The full report preserves:
 
 ## Process
 
-This section is the algorithm. Follow it every run.
+This is an orchestration contract, not a suggestion. A leaf is one `xsearch` process. `N x Q` means **N distinct leaves, each with plan size Q**.
 
-### 1. Form
+### 0. Choose the role
 
-1. **Rewrite** into a self-contained query: entity + time + dimension. State the real goal (watch X–Y).
-2. **Confirm** scope/budget/preference with the host ask/choice UI when needed — not a product-specific tool name. User “just search / don’t ask” → shorten confirmation.
-3. Treat confirmation as **preference**, not verified entity facts. Unverified attributes from the user stay out of every angle query until retrieval supports them; rewrite neutrally and disambiguate entities as a normal step.
-4. If local docs/code/config already name entities or terms, read them as **material for rewrite** (and later merge). Default is **parallel** with search; you may sharpen first then search when that clearly helps.
-5. **Done when:** rewritten goal is explicit, and either confirmation is settled or the user waived it.
+- **Parent mode:** you own the user request. Follow sections 1–6 and create the route objects.
+- **Leaf mode:** your task already contains one route object or explicitly says to execute one route. Skip sections 1–4, execute section 5 once, return its note, and stop.
 
-### 2. Angles
+A leaf never reloads this process as a new parent and never creates hypotheses, routes, or children.
 
-| Rule | Do |
-| --- | --- |
-| Default | **≥3 orthogonal angles**, then fan-in |
-| Cap | **8** |
-| Fewer than 3 | only if user forbids expansion or host cannot multi-run |
-| Never | one large-Q call described as “multiple angles” |
+### 1. Form the question
 
-When entity/time/disposition boundaries are still unstable, start with a **small-Q** pass, then widen N/Q.
+1. Rewrite the request into a self-contained goal: entity + current time boundary + dimension. Resolve the real goal when the wording shows an X–Y mismatch.
+2. Ask one short preference question only when different answers would materially change the search. A user saying “just search” waives that question, not the multi-route default.
+3. Keep unverified user claims neutral until retrieval supports them. Use local context to sharpen names and terms, but do not treat it as public evidence.
 
-Budget hints (not a program gate): floor ≥3×Q5; light 3×5; mid 3–4×5–10; wide 4–6×10–20.
+**Done when:** the goal is searchable without hidden conversation context.
 
-**Done when:** angle list is orthogonal, each has one concrete query string, and N/Q are chosen.
+### 2. Build hypotheses and choose scope
 
-### 3. Execute (one angle → one leaf)
+Before calling a leaf, write 2–6 competing hypotheses or aspects. Each must say what evidence would support or weaken it.
 
-1. One angle → exactly one `bin/xsearch --json` (at most one follow-up). No nested fan-out.
-2. Read the receipt, then `manifest_path`; do not read `report_path` wholesale.
-3. Select item files by sub-question, `info_status`, body size, and URL count. Read only the `item_path` files needed for this angle.
-4. Let the model use any retrieval capabilities available upstream; native tools are optional implementation details.
-5. Return a **short note** to the parent — not artifact contents.
+| Scope | Signal | First round |
+| --- | --- | --- |
+| Narrow | one entity and one factual goal | **2 routes x Q5** |
+| Medium | 2–3 dimensions, objects, or explanations | **3–4 routes x Q5–10** |
+| Wide | landscape, controversy, multi-hop, or 4+ dimensions | **4–6 routes x Q10–20** |
+| Explicit direct | user says one call, no split, or raw result | **1 route x Q5** |
 
-| Field | Meaning |
-| --- | --- |
-| `angle` | short name |
-| `query` | what was searched |
-| `Q` | plan size |
-| `findings` | 3–7 bullets; empty/refused are facts |
-| `conflicts` / `gaps` | when present |
-| `links` | `{title,url}` or `missing_link` |
-| `info_yield` | `ok` \| `empty` \| `refused` \| `thin` |
-| `confidence` | trust in **the findings you wrote**, not volume of material |
+Hard cap: 8 routes. Runtime limits still apply. A simple question is **narrow**, not automatically direct.
 
-**Done when:** every planned angle has a note (including empty/failed).
+### 3. Plan orthogonal routes
 
-### 4. Fan-in
+Create all route objects before dispatch. Each route has:
 
-1. Collect every note.
-2. Merge only claims that cohere; mark single-source claims.
-3. On the same claim (who / when / what outcome / source class), **surface conflicts in their own section** — never silently prefer one `ok` body.
-4. Grade sources in the narrative: primary/official vs secondary vs single-source rumor; do not promote weaker grades.
-5. Dedupe URLs via notes + leaf `deduped_urls`; never invent URLs.
-6. Answer in plain language; few links. Drop paraphrase-only angles at merge.
+- `route_id`, `route_name`, `query`, `Q`
+- `target_dimension`, `output_goal`
+- `targets_hypotheses`, `decision_value`
+- a compact `context_pack` when needed
 
-The binary enforces **count Q**, not semantic diversity.
+Routes must differ materially by dimension, time window, entity set, evidence class, or decision goal. Merge paraphrase duplicates before execution. Keep at most one broad survey route.
 
-**Done when:** final answer states agreements, open conflicts/gaps, and graded sources without dumping leaf transcripts.
+**Done when:** exactly N distinct route objects exist and each has one concrete query.
+
+### 4. Dispatch a real fan-out
+
+1. When the host has isolated child/task agents, dispatch **N children concurrently**: one child = one route = one leaf.
+2. Otherwise use the host’s parallel tool/process facility to run **N independent CLI calls in one batch**.
+3. Only when neither form of concurrency exists may routes run sequentially; they remain N separate calls.
+4. Dispatch the whole round before waiting. A child never creates more routes or children.
+5. One large-Q call never substitutes for multiple routes.
+6. After the host reports a route as failed, timed out, cancelled, or malformed, the parent creates its failure note and continues fan-in; do not wait forever for a missing child.
+
+Do not claim fan-out until the route ledger contains N terminal notes and records which have receipts/manifests. If fewer than N succeeded, report a partial fan-out; do not silently relabel it successful.
+
+### 5. Execute one leaf
+
+For each route:
+
+1. Run exactly one `xsearch --json "<query>" Q`; allow at most one targeted follow-up after fan-in.
+2. Read the receipt, then `manifest_path`. Select only the item files needed for this route; do not load `report.json` wholesale.
+3. Return a short structured note, never the artifact bodies:
+
+```json
+{
+  "route_id": "R1",
+  "round": 1,
+  "status": "ok|failed|timeout|cancelled|malformed",
+  "error": null,
+  "query_used": "...",
+  "Q": 5,
+  "manifest_path": "... or null",
+  "findings": ["3–7 concise signals"],
+  "supports": ["H1"],
+  "weakens": ["H2"],
+  "conflicts": [],
+  "gaps": [],
+  "new_entities": [],
+  "next_route_candidates": [],
+  "links": [{"title": "...", "url": "https://..."}],
+  "info_yield": "ok|empty|refused|thin|failed",
+  "confidence": "low|medium|high"
+}
+```
+
+A failed, empty, or refused route still gets a note. If the child cannot return one, the parent synthesizes it from the terminal host error with `manifest_path: null`, empty findings, and `info_yield: failed`. Confidence describes the written findings, not result volume.
+
+If a child returns malformed prose, the parent makes one best-effort extraction of `route_id`, `query_used`, `findings`, `conflicts`, `gaps`, and `links`. If that fails, record `status: malformed`, `confidence: low`, and never expand from that note.
+
+### 6. Fan in, score, and decide
+
+1. Collect one note for every planned route, including failures.
+2. Score routes qualitatively on `info_gain`, `conflict_resolution`, `novelty`, `actionability`, `redundancy`, and `uncertainty`.
+3. Merge mutually supporting claims; label single-route claims. Put genuine conflicts and unknowns in separate sections.
+4. Dedupe URLs across notes and leaf `deduped_urls`. Prefer primary/official evidence; never invent a link.
+5. Expand only when a new entity, unresolved conflict, missing mechanism, or high-value gap could change the answer. Run at most one follow-up round using the best 1–3 candidates.
+6. For that round, create new route objects with unique IDs (`F1`, `F2`, …), dispatch them by section 4, collect section 5 notes with `round: 2`, and merge them into the same route ledger before answering.
+7. Stop when new routes would be paraphrases, results repeat, or the user’s question is answered. Never expand from failed or malformed notes.
+8. Answer in plain language with conclusions first, then conflicts/gaps and a few useful links. Do not expose N/Q terminology unless the user asks about execution.
+
+**Done when:** the answer is backed by a verifiable route count, reports important conflicts/gaps, and does not dump leaf transcripts.
 
 ---
 
 ## Guardrails
 
-- Never invent URLs.
-- Default: receipt → manifest → selected item files. Never load `report.json` wholesale into the parent context.
+- Never invent URLs or turn an empty route into a world-level claim.
+- The binary enforces **count Q**, not route diversity. The parent owns hypotheses, routes, dispatch, and fan-in.
+- Default: receipt → manifest → selected item files. Keep full artifacts out of parent context.
 - No MCP client and no local search daemon required.
 - Logging only via `XSEARCH_LOG_DIR`; this skill does not own dogfood scoring.
