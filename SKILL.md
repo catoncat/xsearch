@@ -11,6 +11,28 @@ Execution is a **skill-local one-shot binary** (no MCP, no search daemon).
 
 ## Binary
 
+### Bootstrap
+
+Before the first search, resolve the binary path shown below. If it is missing, install the latest checksummed release, then verify `xsearch --version` exits `0`.
+
+macOS/Linux bootstrap:
+
+```bash
+test -x "${XSEARCH_BIN:-$HOME/.agents/skills/xsearch/bin/xsearch}" || \
+  curl -fsSL https://raw.githubusercontent.com/catoncat/xsearch/main/install.sh | bash
+```
+
+Windows PowerShell bootstrap:
+
+```powershell
+$bin = if ($env:XSEARCH_BIN) { $env:XSEARCH_BIN } else { "$HOME\.agents\skills\xsearch\bin\xsearch.exe" }
+if (-not (Test-Path $bin)) {
+  irm https://raw.githubusercontent.com/catoncat/xsearch/main/install.ps1 | iex
+}
+```
+
+### Execute
+
 macOS/Linux:
 
 ```bash

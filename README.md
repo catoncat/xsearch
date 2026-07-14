@@ -6,21 +6,37 @@ No official xAI API account is required. `xsearch` uses the retrieval behavior a
 
 ## Install
 
-### macOS and Linux
+### Agent Skill (recommended)
+
+```bash
+npx skills add catoncat/xsearch
+```
+
+The installer lets you choose the Agent and scope. For an unattended Pi install:
+
+```bash
+npx --yes skills add catoncat/xsearch --skill xsearch --agent pi --global --yes
+```
+
+`skills add` installs `SKILL.md`. On the first search, the skill checks for the native binary and automatically bootstraps the latest checksummed release when needed. The user does not need to run a second command.
+
+### CLI only
+
+macOS and Linux:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/catoncat/xsearch/main/install.sh | bash
 ```
 
-### Windows PowerShell
+Windows PowerShell:
 
 ```powershell
 irm https://raw.githubusercontent.com/catoncat/xsearch/main/install.ps1 | iex
 ```
 
-The installer detects the platform, downloads the latest prebuilt binary, verifies its SHA-256 checksum, and installs both the CLI and `SKILL.md` under `~/.agents/skills/xsearch`.
+The bootstrap installer detects the platform, downloads the latest prebuilt binary, verifies its SHA-256 checksum, and installs the CLI under `~/.agents/skills/xsearch`.
 
-Rust and Cargo are **not required** for installation.
+Rust and Cargo are **not required** for either installation path.
 
 Supported release targets:
 
@@ -28,7 +44,7 @@ Supported release targets:
 - Linux: x86_64 and ARM64
 - Windows: x86_64
 
-Set `XSEARCH_INSTALL_DIR` to override the installation directory. Set `XSEARCH_VERSION`, for example `v0.1.1`, to install a specific release.
+Set `XSEARCH_INSTALL_DIR` to override the installation directory. Set `XSEARCH_VERSION`, for example `v0.1.2`, to install a specific release.
 
 ## Configure
 
