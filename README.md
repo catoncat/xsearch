@@ -5,6 +5,8 @@
 
 # xsearch
 
+![xsearch：将一个搜索问题转换为结构化来源](./assets/xsearch-banner.png)
+
 **把你已经在用的 Grok 反代，变成 Agent 的搜索工具。**
 
 `xsearch` 通过兼容的第三方 Grok 模型接口，为 Agent 提供结构化网页搜索。不需要 MCP，不需要复杂的安装过程，任何支持 Skill 和命令执行的 Agent 都可以使用。

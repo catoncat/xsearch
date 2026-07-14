@@ -5,6 +5,8 @@
 
 # xsearch
 
+![xsearch turns one search query into structured sources](./assets/xsearch-banner.png)
+
 **Search through the Grok proxy you already have.**
 
 `xsearch` gives agents structured web search through any compatible third-party Grok endpoint. No MCP, no complicated setup, and no lock-in to a specific agent.
