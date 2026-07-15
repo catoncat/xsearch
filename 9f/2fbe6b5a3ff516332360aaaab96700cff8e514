@@ -1,0 +1,31 @@
+engine/Cargo.toml
+  s_9843e894ca73f4::t_a33ed4532607c0 3
+AGENTS.md
+  s_9843e894ca73f4::t_a33ed4532607c0 1-9
+engine/Cargo.lock
+  s_384907d0f14320::t_9b1b8677337923 1471
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "9f2fbe6b5a3ff516332360aaaab96700cff8e514",
+  "prompts": {},
+  "sessions": {
+    "s_384907d0f14320": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f635b-06da-74c0-a80f-91e7ae5ceda5",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "cat <git@chen.rs>"
+    },
+    "s_9843e894ca73f4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f63c6-d9c8-7ec2-8c69-c1345d0284eb",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "cat <git@chen.rs>"
+    }
+  }
+}
