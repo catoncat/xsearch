@@ -41,7 +41,7 @@ API key 尽量放在环境变量里：
 export XSEARCH_API_KEY="your-provider-key"
 ```
 
-然后直接让 Agent 搜索。问题拆分、并发检索、来源整理和结果综合都由 skill 完成。
+然后让 Agent 使用 xsearch 搜索。支持 slash skill 的宿主可用 `/skill:xsearch 你的问题` 明确调用；其他宿主直接点名 xsearch 即可。问题拆分、并发检索、来源整理和结果综合都由 skill 完成。
 
 ## 为什么不浪费上下文
 

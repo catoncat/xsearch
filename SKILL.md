@@ -1,200 +1,113 @@
 ---
 name: xsearch
-description: "Search the public web through a configured OpenAI-compatible Grok model endpoint. Use when the user wants online facts, latest public info, comparisons, research, multi-angle surveys, or web/Grok search. Once loaded or named, run retrieval by default; local evidence may refine and complement search."
+description: "Web search and online research. Use xsearch for every request that needs current public information: simple online facts, latest developments, official-source verification, comparisons, research, multi-angle surveys, or explicit web/Grok search."
 ---
 
 # xsearch
 
-Natural-language in → multi-angle retrieval → plain-language answer.
+Turn a natural-language question into a **fan-out ledger** of independent searches, then fan in to a sourced answer.
 
-Execution is a **skill-local one-shot binary** (no MCP, no search daemon).
+## Resolve the leaf
 
-## Binary
-
-### Bootstrap
-
-Before the first search, resolve the binary path shown below. If it is missing, install the latest checksummed release, then verify `xsearch --version` exits `0`.
-
-macOS/Linux bootstrap:
-
-```bash
-test -x "${XSEARCH_BIN:-$HOME/.agents/skills/xsearch/bin/xsearch}" || \
-  curl -fsSL https://raw.githubusercontent.com/catoncat/xsearch/main/install.sh | bash
-```
-
-Windows PowerShell bootstrap:
-
-```powershell
-$bin = if ($env:XSEARCH_BIN) { $env:XSEARCH_BIN } else { "$HOME\.agents\skills\xsearch\bin\xsearch.exe" }
-if (-not (Test-Path $bin)) {
-  irm https://raw.githubusercontent.com/catoncat/xsearch/main/install.ps1 | iex
-}
-```
-
-### Execute
+Before searching, resolve the executable and verify `--version` exits `0`.
 
 macOS/Linux:
 
 ```bash
-"${XSEARCH_BIN:-$HOME/.agents/skills/xsearch/bin/xsearch}" --json "<query>" [Q]
+test -x "${XSEARCH_BIN:-$HOME/.agents/skills/xsearch/bin/xsearch}" || \
+  curl -fsSL https://raw.githubusercontent.com/catoncat/xsearch/main/install.sh | bash
+"${XSEARCH_BIN:-$HOME/.agents/skills/xsearch/bin/xsearch}" --version
 ```
 
 Windows PowerShell:
 
 ```powershell
 $bin = if ($env:XSEARCH_BIN) { $env:XSEARCH_BIN } else { "$HOME\.agents\skills\xsearch\bin\xsearch.exe" }
-& $bin --json "<query>" [Q]
+if (-not (Test-Path $bin)) { irm https://raw.githubusercontent.com/catoncat/xsearch/main/install.ps1 | iex }
+& $bin --version
 ```
 
-- Pass `Q` when plan size matters (default **5**).
-- **Stdout**: a small `xsearch.run.v1` receipt with `manifest_path` and `report_path`.
-- Full results: private local artifacts; use `--full` only for explicit debugging.
-- **Stderr**: errors/diagnostics. Exit `0` only when the receipt and artifacts are complete.
-- Build source: `engine/`; run `scripts/install.sh` after cloning.
+For setup, config, artifact fields, or failures, read `references/runtime.md`.
 
-### Config (defaults < file < env)
+## Choose the role
 
-First file found: `$XSEARCH_CONFIG`; otherwise `$XDG_CONFIG_HOME/xsearch`, `~/.config/xsearch`, or `%APPDATA%\xsearch` on Windows.
-Example: `config.example.toml`.
+- **Parent:** you own the user request. Follow the parent process below.
+- **Leaf:** your task already contains a self-contained xsearch leaf handoff. Follow that handoff once and return its result. Leaf mode is terminal: one route, one process, one note.
 
-| Key / Env | Required | Meaning |
-| --- | --- | --- |
-| `api_url` / `XSEARCH_API_URL` | **yes** (one of) | OpenAI-compatible base |
-| `api_key` / `XSEARCH_API_KEY` | if upstream needs it | Prefer **env** for secrets |
-| `model` / `XSEARCH_MODEL` | no | default `grok-4.3-fast` |
-| `analysis_model` / `XSEARCH_ANALYSIS_MODEL` | no | defaults to search model |
-| `timeout_secs` / `XSEARCH_TIMEOUT` | no | seconds (default 600) |
-| `XSEARCH_ARTIFACT_DIR` | no | root for receipt artifacts; defaults to the user cache directory |
-| `log_dir` / `XSEARCH_LOG_DIR` | no | compatibility override for the artifact root |
+## Ledger invariant
 
-Env overrides file for the same field. On binary failure: report stderr; do not invent results.
+`N x Q` means N ledger routes, each executing one independent xsearch process with plan size Q. A larger Q is deeper retrieval inside one route; it never replaces another route.
 
-### Artifact output
+Each route maps to one host child ID or tool-call ID. Keep route commands separate: shell separators, chained commands, and multi-route shell scripts are not fan-out.
 
-The receipt points to:
+Every ledger entry has `route_id`, `round`, `query`, `Q`, `host_call_id`, `status`, and eventually `manifest_path` or `error`. A round is complete when all N entries are terminal. It is fully successful only when all N have distinct host call IDs and receipts/manifests.
 
-- `manifest.json`: item index with sub-question, status, body size, URL count, and `item_path`.
-- `items/NNN.json`: one complete sub-search result per file.
-- `report.json`: complete `xsearch.retrieval.v1` report.
-
-The full report preserves:
-
-- `structured.items[]`: `index`, `sub_question`, `success`, `body`, `urls[]`, `info_status` (`ok|empty|refused|thin`), …
-- `structured.deduped_urls[]`: url, sources, first_rank, occurrence_count
-- `success` = upstream call ok; **`info_status` = body yield** (not truth)
-- Q hard guarantee: `requested_max_query_plan == actual_sub_queries == len(items)`
-
----
-
-## Process
-
-This is an orchestration contract, not a suggestion. A leaf is one `xsearch` process. `N x Q` means **N distinct leaves, each with plan size Q**.
-
-### 0. Choose the role
-
-- **Parent mode:** you own the user request. Follow sections 1–6 and create the route objects.
-- **Leaf mode:** your task already contains one route object or explicitly says to execute one route. Skip sections 1–4, execute section 5 once, return its note, and stop.
-
-A leaf never reloads this process as a new parent and never creates hypotheses, routes, or children.
+## Parent process
 
 ### 1. Form the question
 
-1. Rewrite the request into a self-contained goal: entity + current time boundary + dimension. Resolve the real goal when the wording shows an X–Y mismatch.
-2. Ask one short preference question only when different answers would materially change the search. A user saying “just search” waives that question, not the multi-route default.
-3. Keep unverified user claims neutral until retrieval supports them. Use local context to sharpen names and terms, but do not treat it as public evidence.
+Rewrite the request as a self-contained goal: entity + current time boundary + dimension. Resolve an X-Y mismatch when the stated query differs from the likely goal. Keep unverified user claims neutral.
 
-**Done when:** the goal is searchable without hidden conversation context.
+Ask one short preference question only when different answers would materially change what gets searched. “Just search” waives the question, not fan-out. Explicit “one call”, “do not split”, or “return the raw result” selects direct mode.
 
-### 2. Build hypotheses and choose scope
+**Complete when:** the goal is searchable without hidden conversation context.
 
-Before calling a leaf, write 2–6 competing hypotheses or aspects. Each must say what evidence would support or weaken it.
+### 2. Choose scope and hypotheses
+
+Write 2–6 competing hypotheses or evidence aspects, each with evidence that would support or weaken it.
 
 | Scope | Signal | First round |
 | --- | --- | --- |
 | Narrow | one entity and one factual goal | **2 routes x Q5** |
 | Medium | 2–3 dimensions, objects, or explanations | **3–4 routes x Q5–10** |
 | Wide | landscape, controversy, multi-hop, or 4+ dimensions | **4–6 routes x Q10–20** |
-| Explicit direct | user says one call, no split, or raw result | **1 route x Q5** |
+| Direct | user explicitly requests one call/no split/raw result | **1 route x Q5** |
 
-Hard cap: 8 routes. Runtime limits still apply. A simple question is **narrow**, not automatically direct.
+Cap a round at 8 routes and respect runtime limits. A simple question is narrow, not automatically direct.
 
-### 3. Plan orthogonal routes
+**Complete when:** scope, N, Q, and the support/weaken conditions are explicit.
 
-Create all route objects before dispatch. Each route has:
+### 3. Open the ledger
 
-- `route_id`, `route_name`, `query`, `Q`
+Create all route objects before dispatch. Each contains:
+
+- `route_id`, `route_name`, `round`, `query`, `Q`
 - `target_dimension`, `output_goal`
 - `targets_hypotheses`, `decision_value`
-- a compact `context_pack` when needed
+- a compact `context_pack` when local context is needed
 
-Routes must differ materially by dimension, time window, entity set, evidence class, or decision goal. Merge paraphrase duplicates before execution. Keep at most one broad survey route.
+Routes differ by dimension, time window, entity set, evidence class, or decision goal. Merge paraphrase duplicates and keep at most one broad survey route. Every hypothesis/aspect must be covered by at least one route.
 
-**Done when:** exactly N distinct route objects exist and each has one concrete query.
+**Complete when:** the ledger contains exactly N unique, covered, dispatchable routes.
 
-### 4. Dispatch a real fan-out
+### 4. Dispatch the round
 
-1. When the host has isolated child/task agents, dispatch **N children concurrently**: one child = one route = one leaf.
-2. Otherwise use the host’s parallel tool/process facility to run **N independent CLI calls in one batch**.
-3. Only when neither form of concurrency exists may routes run sequentially; they remain N separate calls.
-4. Dispatch the whole round before waiting. A child never creates more routes or children.
-5. One large-Q call never substitutes for multiple routes.
-6. After the host reports a route as failed, timed out, cancelled, or malformed, the parent creates its failure note and continues fan-in; do not wait forever for a missing child.
+Read `references/leaf.md`. For every route, build a self-contained child task from its handoff template, including the resolved executable path, route object, command, and result contract.
 
-Do not claim fan-out until the route ledger contains N terminal notes and records which have receipts/manifests. If fewer than N succeeded, report a partial fan-out; do not silently relabel it successful.
+Use the host's strongest available execution lane:
 
-### 5. Execute one leaf
+1. N isolated child/task agents submitted concurrently; or
+2. N separate CLI tool calls submitted in the same assistant turn/batch; or
+3. N separate sequential tool calls only when concurrency is unavailable.
 
-For each route:
+One child or tool call owns exactly one route. Set each host call timeout to at least the runtime timeout (default 600 seconds). Submit the entire concurrent round before waiting and record each distinct host call ID as `running`.
 
-1. Run exactly one `xsearch --json "<query>" Q`; allow at most one targeted follow-up after fan-in.
-2. Read the receipt, then `manifest_path`. Select only the item files needed for this route; do not load `report.json` wholesale.
-3. Return a short structured note, never the artifact bodies:
+**Complete when:** the ledger has N distinct host call IDs submitted before collection begins, or a terminal dispatch error for an unsubmitted route.
 
-```json
-{
-  "route_id": "R1",
-  "round": 1,
-  "status": "ok|failed|timeout|cancelled|malformed",
-  "error": null,
-  "query_used": "...",
-  "Q": 5,
-  "manifest_path": "... or null",
-  "findings": ["3–7 concise signals"],
-  "supports": ["H1"],
-  "weakens": ["H2"],
-  "conflicts": [],
-  "gaps": [],
-  "new_entities": [],
-  "next_route_candidates": [],
-  "links": [{"title": "...", "url": "https://..."}],
-  "info_yield": "ok|empty|refused|thin|failed",
-  "confidence": "low|medium|high"
-}
-```
+### 5. Close the ledger
 
-A failed, empty, or refused route still gets a note. If the child cannot return one, the parent synthesizes it from the terminal host error with `manifest_path: null`, empty findings, and `info_yield: failed`. Confidence describes the written findings, not result volume.
+Collect one terminal note per route. A host failure, timeout, or cancellation becomes a parent-authored failure note. For malformed child output, apply the single extraction fallback in `references/leaf.md`; a failed extraction becomes `status: malformed` and cannot seed expansion.
 
-If a child returns malformed prose, the parent makes one best-effort extraction of `route_id`, `query_used`, `findings`, `conflicts`, `gaps`, and `links`. If that fails, record `status: malformed`, `confidence: low`, and never expand from that note.
+A completed process must provide a distinct `xsearch.run.v1` receipt and `manifest_path`. Keep artifact bodies in their files; select only the item files needed for that route.
 
-### 6. Fan in, score, and decide
+**Complete when:** all N ledger entries are terminal and successful entries have distinct host call IDs, run IDs, and manifest paths.
 
-1. Collect one note for every planned route, including failures.
-2. Score routes qualitatively on `info_gain`, `conflict_resolution`, `novelty`, `actionability`, `redundancy`, and `uncertainty`.
-3. Merge mutually supporting claims; label single-route claims. Put genuine conflicts and unknowns in separate sections.
-4. Dedupe URLs across notes and leaf `deduped_urls`. Prefer primary/official evidence; never invent a link.
-5. Expand only when a new entity, unresolved conflict, missing mechanism, or high-value gap could change the answer. Run at most one follow-up round using the best 1–3 candidates.
-6. For that round, create new route objects with unique IDs (`F1`, `F2`, …), dispatch them by section 4, collect section 5 notes with `round: 2`, and merge them into the same route ledger before answering.
-7. Stop when new routes would be paraphrases, results repeat, or the user’s question is answered. Never expand from failed or malformed notes.
-8. Answer in plain language with conclusions first, then conflicts/gaps and a few useful links. Do not expose N/Q terminology unless the user asks about execution.
+### 6. Fan in and decide
 
-**Done when:** the answer is backed by a verifiable route count, reports important conflicts/gaps, and does not dump leaf transcripts.
+Score each usable route on information gain, conflict resolution, novelty, actionability, redundancy, and uncertainty. Merge mutually supporting claims; label single-route claims. Put genuine conflicts and unknowns in separate sections. Dedupe URLs and prefer primary/official evidence.
 
----
+Open one follow-up round only when a new entity, unresolved conflict, missing mechanism, or high-value gap could change the answer. Use the best 1–3 candidates, assign new IDs (`F1`, `F2`, ...), and repeat sections 3–5 with `round: 2`. Failed or malformed notes do not seed follow-up routes.
 
-## Guardrails
+Stop when proposed routes are paraphrases, results repeat, or the question is answered. Respond with conclusions first, then important conflicts/gaps and a few useful links. Keep N/Q terminology internal unless the user asks about execution.
 
-- Never invent URLs or turn an empty route into a world-level claim.
-- The binary enforces **count Q**, not route diversity. The parent owns hypotheses, routes, dispatch, and fan-in.
-- Default: receipt → manifest → selected item files. Keep full artifacts out of parent context.
-- No MCP client and no local search daemon required.
-- Logging only via `XSEARCH_LOG_DIR`; this skill does not own dogfood scoring.
+**Complete when:** the final answer is backed by the closed ledger, preserves material conflicts/gaps, and does not dump leaf transcripts.

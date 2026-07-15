@@ -41,7 +41,7 @@ Keep the key out of the file when possible:
 export XSEARCH_API_KEY="your-provider-key"
 ```
 
-Then ask your agent to search. The skill handles query planning, concurrent retrieval, source collection, and synthesis.
+Then ask your agent to search with xsearch. On hosts with slash skills, `/skill:xsearch your question` loads it explicitly; elsewhere, name xsearch in the request. The skill handles query planning, concurrent retrieval, source collection, and synthesis.
 
 ## Why it stays small
 
