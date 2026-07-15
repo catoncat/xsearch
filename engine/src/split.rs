@@ -171,7 +171,7 @@ fn parse_loose_quoted(seg: &str) -> Option<Vec<String>> {
     }
 }
 
-pub fn enforce_sub_query_count(query: &str, q: u32, raw: Vec<String>) -> Vec<String> {
+fn normalize_sub_queries(q: u32, raw: Vec<String>) -> Vec<String> {
     let mut cleaned: Vec<String> = raw
         .into_iter()
         .map(|s| strip_meta_prefix(&s))
@@ -185,9 +185,6 @@ pub fn enforce_sub_query_count(query: &str, q: u32, raw: Vec<String>) -> Vec<Str
 
     if cleaned.len() > q as usize {
         cleaned.truncate(q as usize);
-    }
-    while cleaned.len() < q as usize {
-        cleaned.push(query.trim().to_string());
     }
     cleaned
 }
@@ -220,11 +217,14 @@ pub async fn split_into_q(
         {
             Ok(response) => match parse_sub_queries(&response.content) {
                 Ok(parsed) => {
-                    let enforced = enforce_sub_query_count(query, q, parsed);
-                    if enforced.len() == q as usize {
-                        return Ok(enforced);
+                    let normalized = normalize_sub_queries(q, parsed);
+                    if normalized.len() == q as usize {
+                        return Ok(normalized);
                     }
-                    last_err = Some(SearchError::Internal("enforce length mismatch".into()));
+                    last_err = Some(SearchError::Upstream(format!(
+                        "analysis model returned {} usable distinct sub-queries; expected {q}",
+                        normalized.len()
+                    )));
                 }
                 Err(e) => last_err = Some(e),
             },
@@ -232,9 +232,9 @@ pub async fn split_into_q(
         }
     }
 
-    // Fallback: Q copies of original query (still exact Q)
-    let _ = last_err;
-    Ok(enforce_sub_query_count(query, q, vec![]))
+    Err(last_err.unwrap_or_else(|| {
+        SearchError::Upstream("analysis model did not return a usable sub-query plan".into())
+    }))
 }
 
 #[cfg(test)]
@@ -242,15 +242,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn enforce_pads_and_truncates() {
-        let out = enforce_sub_query_count("base", 3, vec!["a".into(), "b".into()]);
-        // "a","b" too short -> filtered, then pad with base
-        assert_eq!(out.len(), 3);
-        let out2 = enforce_sub_query_count(
-            "base",
+    fn normalize_filters_duplicates_and_truncates_without_padding() {
+        let out = normalize_sub_queries(3, vec!["a".into(), "b".into()]);
+        assert!(out.is_empty());
+        let out2 = normalize_sub_queries(
             2,
             vec![
                 "what is aspect one about X".into(),
+                "WHAT IS ASPECT ONE ABOUT X".into(),
                 "what is aspect two about X".into(),
                 "what is aspect three about X".into(),
             ],

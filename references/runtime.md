@@ -15,6 +15,7 @@ Config file: `$XSEARCH_CONFIG`; otherwise `$XDG_CONFIG_HOME/xsearch/config.toml`
 | `model` / `XSEARCH_MODEL` | no | Search model; default `grok-4.3-fast` |
 | `analysis_model` / `XSEARCH_ANALYSIS_MODEL` | no | Query-splitting model; defaults to search model |
 | `timeout_secs` / `XSEARCH_TIMEOUT` | no | Timeout in seconds; default 600 |
+| `max_q` / `XSEARCH_MAX_Q` | no | Per-process plan limit; default and hard ceiling 20 |
 | `XSEARCH_ARTIFACT_DIR` | no | Artifact root; defaults to the user cache directory |
 | `log_dir` / `XSEARCH_LOG_DIR` | no | Compatibility override for the artifact root |
 
@@ -37,7 +38,9 @@ The full report preserves:
 - `structured.items[]`: `index`, `sub_question`, `success`, `body`, `urls[]`, and `info_status`
 - `structured.deduped_urls[]`: URL, source sub-query IDs, first rank, and occurrence count
 - `success`: whether the upstream call completed
-- `info_status`: `ok`, `empty`, `refused`, or `thin`; this describes yield, not truth
+- `info_status`: `ok`, `empty`, `refused`, `thin`, or `failed`; this describes yield, not truth
+
+Failed upstream calls use `info_status: failed`, never contribute to `ok`, and never contribute URLs. The engine runs at most four sub-searches concurrently per process.
 
 The engine guarantees `requested_max_query_plan == actual_sub_queries == len(items)`. It guarantees Q count, not semantic diversity between parent routes.
 

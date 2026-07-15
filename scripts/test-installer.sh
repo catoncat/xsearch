@@ -13,7 +13,7 @@ case "$(uname -s)/$(uname -m)" in
   *) echo "unsupported test platform" >&2; exit 1 ;;
 esac
 
-mkdir -p "$TMP/release/package" "$TMP/raw" "$TMP/install" "$TMP/config"
+mkdir -p "$TMP/release/package" "$TMP/raw/references" "$TMP/install" "$TMP/config"
 cp "$ROOT/engine/target/release/xsearch" "$TMP/release/package/xsearch"
 tar -C "$TMP/release/package" -czf "$TMP/release/xsearch-$TARGET.tar.gz" xsearch
 (
@@ -25,6 +25,7 @@ tar -C "$TMP/release/package" -czf "$TMP/release/xsearch-$TARGET.tar.gz" xsearch
   fi
 )
 cp "$ROOT/SKILL.md" "$ROOT/config.example.toml" "$TMP/raw/"
+cp "$ROOT/references/runtime.md" "$ROOT/references/leaf.md" "$TMP/raw/references/"
 
 run_installer() {
   XSEARCH_VERSION=v-test \
@@ -38,9 +39,17 @@ run_installer() {
 run_installer
 test -x "$TMP/install/bin/xsearch"
 test -f "$TMP/install/SKILL.md"
+test -f "$TMP/install/references/runtime.md"
+test -f "$TMP/install/references/leaf.md"
 test -f "$TMP/config/xsearch/config.toml"
 "$TMP/install/bin/xsearch" --version | grep -q '^xsearch '
 
 printf '\n# preserved-user-config\n' >> "$TMP/config/xsearch/config.toml"
 run_installer
 grep -q 'preserved-user-config' "$TMP/config/xsearch/config.toml"
+
+XSEARCH_INSTALL_DIR="$TMP/source-install" "$ROOT/scripts/install.sh"
+test -x "$TMP/source-install/bin/xsearch"
+test -f "$TMP/source-install/SKILL.md"
+test -f "$TMP/source-install/references/runtime.md"
+test -f "$TMP/source-install/references/leaf.md"

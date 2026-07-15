@@ -53,9 +53,14 @@ pub fn assemble_report(
 ) -> Report {
     let mut items = Vec::with_capacity(hits.len());
     for (i, hit) in hits.into_iter().enumerate() {
-        let urls = select_urls(&hit.sources, &hit.body);
-        let info_status = classify_info_status(&hit.body, &urls);
-        let title = select_title(&hit.sources, &urls);
+        let (urls, info_status, title) = if hit.success {
+            let urls = select_urls(&hit.sources, &hit.body);
+            let info_status = classify_info_status(&hit.body, &urls);
+            let title = select_title(&hit.sources, &urls);
+            (urls, info_status, title)
+        } else {
+            (Vec::new(), InfoStatus::Failed, None)
+        };
         items.push(Item {
             index: (i + 1) as u32,
             sub_question: hit.sub_question,
@@ -74,6 +79,7 @@ pub fn assemble_report(
         empty: 0,
         refused: 0,
         thin: 0,
+        failed: 0,
     };
     for item in &items {
         match item.info_status {
@@ -81,6 +87,7 @@ pub fn assemble_report(
             InfoStatus::Empty => counts.empty += 1,
             InfoStatus::Refused => counts.refused += 1,
             InfoStatus::Thin => counts.thin += 1,
+            InfoStatus::Failed => counts.failed += 1,
         }
     }
 

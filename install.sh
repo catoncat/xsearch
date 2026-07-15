@@ -77,10 +77,12 @@ main() {
   tar -xzf "$tmp/$asset" -C "$tmp"
   [[ -x "$tmp/xsearch" ]] || fail "release archive does not contain xsearch"
 
-  mkdir -p "$DEST/bin" "$CONFIG_DIR"
+  mkdir -p "$DEST/bin" "$DEST/references" "$CONFIG_DIR"
   install -m 755 "$tmp/xsearch" "$DEST/bin/xsearch"
   curl -fsSL "$raw/SKILL.md" -o "$DEST/SKILL.md"
   curl -fsSL "$raw/config.example.toml" -o "$DEST/config.example.toml"
+  curl -fsSL "$raw/references/runtime.md" -o "$DEST/references/runtime.md"
+  curl -fsSL "$raw/references/leaf.md" -o "$DEST/references/leaf.md"
 
   if [[ ! -e "$CONFIG_DIR/config.toml" ]]; then
     install -m 600 "$DEST/config.example.toml" "$CONFIG_DIR/config.toml"

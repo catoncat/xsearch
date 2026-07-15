@@ -1,6 +1,8 @@
 use crate::assemble::SearchHit;
 use crate::upstream::{ChatMessage, ChatUpstream};
-use futures::future::join_all;
+use futures::{stream, StreamExt};
+
+const MAX_CONCURRENT_SEARCHES: usize = 4;
 
 fn search_system_prompt() -> &'static str {
     r#"You are a web research assistant. Answer the user's question with factual, current public information using the retrieval capabilities available in this runtime.
@@ -43,8 +45,11 @@ pub async fn search_many(
     model: &str,
     sub_queries: &[String],
 ) -> Vec<SearchHit> {
-    let futs = sub_queries.iter().map(|q| search_one(upstream, model, q));
-    join_all(futs).await
+    stream::iter(sub_queries)
+        .map(|query| search_one(upstream, model, query))
+        .buffered(MAX_CONCURRENT_SEARCHES)
+        .collect()
+        .await
 }
 
 #[cfg(test)]
