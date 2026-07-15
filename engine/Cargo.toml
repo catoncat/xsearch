@@ -1,6 +1,6 @@
 [package]
 name = "xsearch"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 description = "One-shot structured web search CLI for OpenAI-compatible Grok endpoints"
 license = "MIT"
