@@ -1,5 +1,7 @@
 use serde::Serialize;
 
+pub const HARD_MAX_Q: u32 = 20;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum InfoStatus {
@@ -7,6 +9,7 @@ pub enum InfoStatus {
     Empty,
     Refused,
     Thin,
+    Failed,
 }
 
 impl InfoStatus {
@@ -16,6 +19,7 @@ impl InfoStatus {
             InfoStatus::Empty => "empty",
             InfoStatus::Refused => "refused",
             InfoStatus::Thin => "thin",
+            InfoStatus::Failed => "failed",
         }
     }
 }
@@ -47,6 +51,7 @@ pub struct InfoStatusCounts {
     pub empty: u32,
     pub refused: u32,
     pub thin: u32,
+    pub failed: u32,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -105,7 +110,7 @@ impl Default for EngineOptions {
             search_model: "grok-4.3-fast".into(),
             analysis_model: "grok-4.3-fast".into(),
             timeout_secs: 600,
-            max_q: 100,
+            max_q: HARD_MAX_Q,
         }
     }
 }

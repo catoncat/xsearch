@@ -26,12 +26,13 @@ impl RunReceipt {
     pub fn to_human(&self) -> String {
         let counts = &self.info_status_counts;
         format!(
-            "xsearch complete\n  searches : {} ({} ok, {} thin, {} empty, {} refused)\n  sources  : {}\n  elapsed  : {:.2}s\n  manifest : {}\n  report   : {}\n  next     : read the manifest, then only the item files needed",
+            "xsearch complete\n  searches : {} ({} ok, {} thin, {} empty, {} refused, {} failed)\n  sources  : {}\n  elapsed  : {:.2}s\n  manifest : {}\n  report   : {}\n  next     : read the manifest, then only the item files needed",
             self.item_count,
             counts.ok,
             counts.thin,
             counts.empty,
             counts.refused,
+            counts.failed,
             self.source_count,
             self.duration_ms as f64 / 1_000.0,
             self.manifest_path,
@@ -204,6 +205,7 @@ mod tests {
                     empty: 0,
                     refused: 0,
                     thin: 0,
+                    failed: 0,
                 },
             },
             metadata: Metadata {

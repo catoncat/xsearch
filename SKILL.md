@@ -58,12 +58,12 @@ Write 2–6 competing hypotheses or evidence aspects, each with evidence that wo
 
 | Scope | Signal | First round |
 | --- | --- | --- |
-| Narrow | one entity and one factual goal | **2 routes x Q5** |
-| Medium | 2–3 dimensions, objects, or explanations | **3–4 routes x Q5–10** |
-| Wide | landscape, controversy, multi-hop, or 4+ dimensions | **4–6 routes x Q10–20** |
+| Narrow | one entity and one factual goal | **2 routes x Q3** |
+| Medium | 2–3 dimensions, objects, or explanations | **3 routes x Q3–5** |
+| Wide | landscape, controversy, multi-hop, or 4+ dimensions | **4 routes x Q5–8** |
 | Direct | user explicitly requests one call/no split/raw result | **1 route x Q5** |
 
-Cap a round at 8 routes and respect runtime limits. A simple question is narrow, not automatically direct.
+Cap a round at 6 routes and respect runtime limits. The engine hard-caps Q at 20 and runs at most four sub-searches concurrently per process. A simple question is narrow, not automatically direct.
 
 **Complete when:** scope, N, Q, and the support/weaken conditions are explicit.
 

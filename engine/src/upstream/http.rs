@@ -3,6 +3,7 @@ use crate::error::UpstreamError;
 use async_trait::async_trait;
 use reqwest::Client;
 use serde_json::{json, Value};
+use std::net::IpAddr;
 use std::time::Duration;
 
 pub struct HttpChatUpstream {
@@ -13,13 +14,34 @@ pub struct HttpChatUpstream {
 
 impl HttpChatUpstream {
     pub fn new(api_url: String, api_key: String, timeout_secs: u64) -> Result<Self, UpstreamError> {
+        let parsed = reqwest::Url::parse(&api_url)
+            .map_err(|error| UpstreamError::InvalidEndpoint(error.to_string()))?;
+        let is_loopback = parsed.host_str().is_some_and(|host| {
+            host.eq_ignore_ascii_case("localhost")
+                || host.parse::<IpAddr>().is_ok_and(|ip| ip.is_loopback())
+        });
+        match parsed.scheme() {
+            "https" => {}
+            "http" if is_loopback => {}
+            "http" => {
+                return Err(UpstreamError::InvalidEndpoint(
+                    "remote HTTP endpoints are unsafe; use HTTPS (HTTP is allowed only for loopback hosts)"
+                        .into(),
+                ));
+            }
+            scheme => {
+                return Err(UpstreamError::InvalidEndpoint(format!(
+                    "unsupported URL scheme {scheme:?}; use HTTPS"
+                )));
+            }
+        }
         let client = Client::builder()
             .timeout(Duration::from_secs(timeout_secs))
             .build()
             .map_err(|e| UpstreamError::Network(e.to_string()))?;
         Ok(Self {
             client,
-            api_url: api_url.trim_end_matches('/').to_string(),
+            api_url: parsed.as_str().trim_end_matches('/').to_string(),
             api_key,
         })
     }
@@ -130,5 +152,39 @@ impl ChatUpstream for HttpChatUpstream {
             .collect();
 
         Ok(ChatResponse { content, sources })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rejects_remote_plain_http_endpoints() {
+        let error = HttpChatUpstream::new("http://proxy.example/v1".into(), "test-key".into(), 30)
+            .err()
+            .expect("remote HTTP endpoint must be rejected");
+
+        assert!(error.to_string().contains("HTTPS"));
+    }
+
+    #[test]
+    fn allows_loopback_http_endpoints_for_local_proxies() {
+        assert!(
+            HttpChatUpstream::new("http://127.0.0.1:8080/v1".into(), "test-key".into(), 30,)
+                .is_ok()
+        );
+        assert!(
+            HttpChatUpstream::new("http://localhost:8080/v1".into(), "test-key".into(), 30,)
+                .is_ok()
+        );
+    }
+
+    #[test]
+    fn allows_https_endpoints() {
+        assert!(
+            HttpChatUpstream::new("https://proxy.example/v1".into(), "test-key".into(), 30,)
+                .is_ok()
+        );
     }
 }

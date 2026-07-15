@@ -40,10 +40,12 @@ try {
     if ($Expected -ne $Actual) { throw "Checksum verification failed" }
 
     Expand-Archive (Join-Path $Temp $Asset) -DestinationPath $Temp -Force
-    New-Item -ItemType Directory -Force -Path (Join-Path $Dest "bin"), $ConfigDir | Out-Null
+    New-Item -ItemType Directory -Force -Path (Join-Path $Dest "bin"), (Join-Path $Dest "references"), $ConfigDir | Out-Null
     Copy-Item (Join-Path $Temp "xsearch.exe") (Join-Path $Dest "bin\xsearch.exe") -Force
     Invoke-WebRequest "$Raw/SKILL.md" -OutFile (Join-Path $Dest "SKILL.md")
     Invoke-WebRequest "$Raw/config.example.toml" -OutFile (Join-Path $Dest "config.example.toml")
+    Invoke-WebRequest "$Raw/references/runtime.md" -OutFile (Join-Path $Dest "references\runtime.md")
+    Invoke-WebRequest "$Raw/references/leaf.md" -OutFile (Join-Path $Dest "references\leaf.md")
 
     $ConfigFile = Join-Path $ConfigDir "config.toml"
     if (-not (Test-Path $ConfigFile)) {

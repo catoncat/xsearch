@@ -16,6 +16,8 @@ pub enum SearchError {
 
 #[derive(Debug, Error)]
 pub enum UpstreamError {
+    #[error("invalid endpoint: {0}")]
+    InvalidEndpoint(String),
     #[error("http {status}: {body}")]
     Http { status: u16, body: String },
     #[error("network: {0}")]

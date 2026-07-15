@@ -15,7 +15,7 @@ pub mod upstream;
 pub use artifact::{default_artifact_root, persist_report, RunReceipt};
 pub use config::{load_resolved, ResolvedConfig};
 pub use error::{SearchError, UpstreamError};
-pub use types::{EngineOptions, InfoStatus, Report, SearchRequest, StructuredV1};
+pub use types::{EngineOptions, InfoStatus, Report, SearchRequest, StructuredV1, HARD_MAX_Q};
 pub use upstream::http::HttpChatUpstream;
 pub use upstream::memory::MemoryChatUpstream;
 pub use upstream::{ChatMessage, ChatResponse, ChatSource, ChatUpstream};
@@ -43,10 +43,11 @@ pub async fn run_search(
     if req.q == 0 {
         return Err(SearchError::InvalidInput("Q must be >= 1".into()));
     }
-    if req.q > opts.max_q {
+    let effective_max_q = opts.max_q.min(HARD_MAX_Q);
+    if req.q > effective_max_q {
         return Err(SearchError::InvalidInput(format!(
             "Q must be <= {}",
-            opts.max_q
+            effective_max_q
         )));
     }
 
@@ -78,6 +79,8 @@ pub async fn run_search(
 mod tests {
     use super::*;
     use crate::upstream::memory::MemoryChatUpstream;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::time::Duration;
 
     #[tokio::test]
     async fn q1_structured_v1() {
@@ -205,6 +208,147 @@ mod tests {
             .unwrap();
         assert_eq!(a.occurrence_count, 2);
         assert_eq!(a.source_subquery_ids, vec![1, 2]);
+    }
+
+    #[tokio::test]
+    async fn partial_failure_is_reported_as_failed_without_error_sources() {
+        let up = MemoryChatUpstream::new(vec![
+            Ok(ChatResponse {
+                content: r#"["successful evidence query", "failing evidence query"]"#.into(),
+                sources: Vec::new(),
+            }),
+            Ok(ChatResponse {
+                content: "Useful evidence https://example.com/source".into(),
+                sources: Vec::new(),
+            }),
+            Err(UpstreamError::Http {
+                status: 500,
+                body: "upstream error https://errors.example/leak ".repeat(20),
+            }),
+        ]);
+
+        let report = run_search(
+            SearchRequest {
+                query: "mixed result probe".into(),
+                q: 2,
+            },
+            &up,
+            EngineOptions::default(),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(report.metadata.success_count, 1);
+        assert_eq!(report.metadata.failure_count, 1);
+        assert_eq!(report.structured.info_status_counts.ok, 1);
+        assert_eq!(report.structured.info_status_counts.failed, 1);
+        assert_eq!(report.structured.items[1].info_status, InfoStatus::Failed);
+        assert!(report.structured.items[1].urls.is_empty());
+        assert_eq!(report.structured.deduped_urls.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn split_failure_is_not_disguised_as_repeated_searches() {
+        let up = MemoryChatUpstream::always("not a valid sub-query plan");
+
+        let error = run_search(
+            SearchRequest {
+                query: "multi-angle research".into(),
+                q: 3,
+            },
+            &up,
+            EngineOptions::default(),
+        )
+        .await
+        .unwrap_err();
+
+        assert!(matches!(error, SearchError::Upstream(_)));
+    }
+
+    #[tokio::test]
+    async fn q_has_a_non_configurable_safety_ceiling() {
+        let up = MemoryChatUpstream::always("unused");
+        let options = EngineOptions {
+            max_q: u32::MAX,
+            ..EngineOptions::default()
+        };
+
+        let error = run_search(
+            SearchRequest {
+                query: "oversized plan".into(),
+                q: 21,
+            },
+            &up,
+            options,
+        )
+        .await
+        .unwrap_err();
+
+        assert!(matches!(error, SearchError::InvalidInput(_)));
+    }
+
+    struct ConcurrencyTrackingUpstream {
+        calls: AtomicUsize,
+        active: AtomicUsize,
+        peak: AtomicUsize,
+    }
+
+    impl ConcurrencyTrackingUpstream {
+        fn new() -> Self {
+            Self {
+                calls: AtomicUsize::new(0),
+                active: AtomicUsize::new(0),
+                peak: AtomicUsize::new(0),
+            }
+        }
+    }
+
+    #[async_trait::async_trait]
+    impl ChatUpstream for ConcurrencyTrackingUpstream {
+        async fn complete(
+            &self,
+            _model: &str,
+            _messages: Vec<ChatMessage>,
+        ) -> Result<ChatResponse, UpstreamError> {
+            let call = self.calls.fetch_add(1, Ordering::SeqCst);
+            if call == 0 {
+                let items = (1..=8)
+                    .map(|index| format!(r#""independent search question {index}""#))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                return Ok(ChatResponse {
+                    content: format!("[{items}]"),
+                    sources: Vec::new(),
+                });
+            }
+
+            let active = self.active.fetch_add(1, Ordering::SeqCst) + 1;
+            self.peak.fetch_max(active, Ordering::SeqCst);
+            tokio::time::sleep(Duration::from_millis(20)).await;
+            self.active.fetch_sub(1, Ordering::SeqCst);
+            Ok(ChatResponse {
+                content: format!("Evidence for call {call} https://example.com/{call}"),
+                sources: Vec::new(),
+            })
+        }
+    }
+
+    #[tokio::test]
+    async fn searches_are_bounded_to_four_concurrent_requests() {
+        let up = ConcurrencyTrackingUpstream::new();
+
+        run_search(
+            SearchRequest {
+                query: "bounded concurrency".into(),
+                q: 8,
+            },
+            &up,
+            EngineOptions::default(),
+        )
+        .await
+        .unwrap();
+
+        assert!(up.peak.load(Ordering::SeqCst) <= 4);
     }
 
     #[tokio::test]

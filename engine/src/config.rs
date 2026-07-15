@@ -8,8 +8,9 @@
 //!
 //! Env always wins over file for the same key.
 
-use crate::types::EngineOptions;
+use crate::types::{EngineOptions, HARD_MAX_Q};
 use serde::Deserialize;
+use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -33,7 +34,7 @@ struct FileConfig {
 }
 
 /// Fully resolved settings for the CLI (and tests that want file/env behavior).
-#[derive(Debug, Clone, Default)]
+#[derive(Clone, Default)]
 pub struct ResolvedConfig {
     pub api_url: Option<String>,
     pub api_key: Option<String>,
@@ -41,6 +42,19 @@ pub struct ResolvedConfig {
     pub log_dir: Option<String>,
     /// Which file was loaded, if any (for diagnostics).
     pub loaded_file: Option<PathBuf>,
+}
+
+impl fmt::Debug for ResolvedConfig {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("ResolvedConfig")
+            .field("api_url", &self.api_url)
+            .field("api_key", &self.api_key.as_ref().map(|_| "[REDACTED]"))
+            .field("options", &self.options)
+            .field("log_dir", &self.log_dir)
+            .field("loaded_file", &self.loaded_file)
+            .finish()
+    }
 }
 
 fn push_config_dir(paths: &mut Vec<PathBuf>, base: PathBuf) {
@@ -176,6 +190,11 @@ pub fn load_resolved() -> Result<ResolvedConfig, String> {
     }
 
     apply_env(&mut cfg);
+    if !(1..=HARD_MAX_Q).contains(&cfg.options.max_q) {
+        return Err(format!(
+            "max_q / XSEARCH_MAX_Q must be between 1 and {HARD_MAX_Q}"
+        ));
+    }
     Ok(cfg)
 }
 
@@ -207,7 +226,12 @@ mod tests {
     #[test]
     fn env_overrides_defaults() {
         let _g = ENV_LOCK.lock().unwrap();
-        // clear relevant
+        let path = std::env::temp_dir().join(format!(
+            "xsearch-empty-config-{}-{}.toml",
+            std::process::id(),
+            chrono::Utc::now().timestamp_nanos_opt().unwrap_or_default()
+        ));
+        fs::write(&path, "").unwrap();
         for k in [
             "XSEARCH_API_URL",
             "XSEARCH_API_KEY",
@@ -215,10 +239,11 @@ mod tests {
             "XSEARCH_ANALYSIS_MODEL",
             "XSEARCH_TIMEOUT",
             "XSEARCH_LOG_DIR",
-            "XSEARCH_CONFIG",
+            "XSEARCH_MAX_Q",
         ] {
             std::env::remove_var(k);
         }
+        std::env::set_var("XSEARCH_CONFIG", &path);
         std::env::set_var("XSEARCH_API_URL", "http://example.test/v1");
         std::env::set_var("XSEARCH_MODEL", "my-model");
         std::env::set_var("XSEARCH_TIMEOUT", "42");
@@ -230,6 +255,8 @@ mod tests {
         std::env::remove_var("XSEARCH_API_URL");
         std::env::remove_var("XSEARCH_MODEL");
         std::env::remove_var("XSEARCH_TIMEOUT");
+        std::env::remove_var("XSEARCH_CONFIG");
+        fs::remove_file(path).unwrap();
     }
 
     #[test]
@@ -268,6 +295,40 @@ timeout_secs = 99
         std::env::remove_var("XSEARCH_CONFIG");
         std::env::remove_var("XSEARCH_MODEL");
         let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn rejects_max_q_above_hard_safety_ceiling() {
+        let _guard = ENV_LOCK.lock().unwrap();
+        let path = std::env::temp_dir().join(format!(
+            "xsearch-empty-config-{}-{}.toml",
+            std::process::id(),
+            chrono::Utc::now().timestamp_nanos_opt().unwrap_or_default()
+        ));
+        fs::write(&path, "").unwrap();
+        std::env::set_var("XSEARCH_CONFIG", &path);
+        std::env::set_var("XSEARCH_MAX_Q", "21");
+
+        let error = load_resolved().unwrap_err();
+
+        assert!(error.contains("XSEARCH_MAX_Q"));
+        assert!(error.contains("20"));
+        std::env::remove_var("XSEARCH_MAX_Q");
+        std::env::remove_var("XSEARCH_CONFIG");
+        fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn debug_output_redacts_api_key() {
+        let cfg = ResolvedConfig {
+            api_key: Some("sensitive-test-key".into()),
+            ..ResolvedConfig::default()
+        };
+
+        let debug = format!("{cfg:?}");
+
+        assert!(debug.contains("[REDACTED]"));
+        assert!(!debug.contains("sensitive-test-key"));
     }
 
     #[cfg(windows)]
