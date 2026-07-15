@@ -1,0 +1,21 @@
+engine/Cargo.toml
+  s_1385d80c812a56::t_8bd284c85a06ab 3
+engine/Cargo.lock
+  s_1385d80c812a56::t_67f57f69f1c5af 1471
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "27df50d8fcb23b7059e7e252e180a6cb0d27ecf3",
+  "prompts": {},
+  "sessions": {
+    "s_1385d80c812a56": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f60d2-8492-7787-bc92-edfd523920f1",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "cat <git@chen.rs>"
+    }
+  }
+}
