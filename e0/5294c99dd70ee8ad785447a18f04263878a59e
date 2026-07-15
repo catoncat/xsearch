@@ -1,0 +1,63 @@
+config.example.toml
+  s_d29f5e65f18f6c::t_438d79d3ed92ff 17
+scripts/install.sh
+  s_d29f5e65f18f6c::t_1b90095ec00114 9,13-14
+engine/src/search.rs
+  s_d29f5e65f18f6c::t_77f36389d12171 3-5,48-52
+SKILL.md
+  s_d29f5e65f18f6c::t_438d79d3ed92ff 61-63,66
+install.sh
+  s_d29f5e65f18f6c::t_1b90095ec00114 80,84-85
+engine/src/error.rs
+  s_d29f5e65f18f6c::t_363d9a56a0a1bb 19-20
+engine/src/artifact.rs
+  s_d29f5e65f18f6c::t_6c3c39296c12b6 29,35
+  s_d29f5e65f18f6c::t_a9dfc2326df98f 208
+references/runtime.md
+  s_d29f5e65f18f6c::t_438d79d3ed92ff 18,41-43
+engine/src/assemble.rs
+  s_d29f5e65f18f6c::t_6c3c39296c12b6 56-63,82,90
+.github/workflows/release.yml
+  s_d29f5e65f18f6c::t_438d79d3ed92ff 12-29,32
+  s_d29f5e65f18f6c::t_7b59d852f30ec8 9,87-88
+engine/src/upstream/http.rs
+  s_d29f5e65f18f6c::t_3fc302ba6c58d8 157-190
+  s_d29f5e65f18f6c::t_363d9a56a0a1bb 6,17-37,44
+scripts/test-installer.sh
+  s_d29f5e65f18f6c::t_9cf65bfe331f00 16,28,42-43,50-55
+engine/src/types.rs
+  s_d29f5e65f18f6c::t_77f36389d12171 3-4,113
+  s_d29f5e65f18f6c::t_6c3c39296c12b6 12,22,54
+engine/src/lib.rs
+  s_d29f5e65f18f6c::t_479785335cdee5 271-274
+  s_d29f5e65f18f6c::t_ad79df205d8007 315-318,320
+  s_d29f5e65f18f6c::t_77f36389d12171 18,46-47,50
+  s_d29f5e65f18f6c::t_e56d6cc6d45967 82-83,213,266-270,275-314,319,321-351
+  s_d29f5e65f18f6c::t_e7e609cd2eada4 251-265,352-353
+  s_d29f5e65f18f6c::t_a9dfc2326df98f 214-250
+engine/src/config.rs
+  s_d29f5e65f18f6c::t_7b59d852f30ec8 52,229-234,242,246,258-259
+  s_d29f5e65f18f6c::t_2f5963cbc8a9f3 300,302
+  s_d29f5e65f18f6c::t_cab0043f5e2f77 11,13,37,47-51,53-59,193-197,301,306-312,320-333
+  s_d29f5e65f18f6c::t_11233a4cd8276b 303-305,313-319
+install.ps1
+  s_d29f5e65f18f6c::t_1b90095ec00114 43,47-48
+engine/src/split.rs
+  s_d29f5e65f18f6c::t_426b8780061a54 174,220-222,224-227,235-237,245-248,252
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "e05294c99dd70ee8ad785447a18f04263878a59e",
+  "prompts": {},
+  "sessions": {
+    "s_d29f5e65f18f6c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f632d-673d-72c1-85d5-4e87d81e4a4e",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": null
+    }
+  }
+}
