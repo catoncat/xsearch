@@ -13,13 +13,15 @@
 
 ## 安装
 
-第一步，安装 skill 定义并选择你的 Agent 和安装范围：
+安装 skill 定义并选择你的 Agent 和安装范围：
 
 ```bash
 npx skills add catoncat/xsearch
 ```
 
-第二步，安装 xsearch CLI。安装器会下载当前平台对应的发行版并校验 SHA-256。
+正常使用不需要第二步：skill 第一次运行时会自动下载当前平台对应的发行版并校验 SHA-256。
+
+如果希望在第一次使用前完成安装和配置，可以手动运行平台安装器。它会把 skill 和 CLI 刷新到默认的全局安装目录，并在配置文件不存在时创建一份模板。
 
 macOS / Linux：
 

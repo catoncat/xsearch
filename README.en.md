@@ -13,13 +13,15 @@
 
 ## Install
 
-First, install the skill definition and choose your agent and scope:
+Install the skill definition and choose your agent and scope:
 
 ```bash
 npx skills add catoncat/xsearch
 ```
 
-Then install the xsearch CLI. The installer downloads the release for your platform and verifies its SHA-256 checksum.
+No second step is required for normal use: on first use, the skill downloads the release for your platform and verifies its SHA-256 checksum.
+
+To install and configure xsearch before first use, run the platform installer manually. It refreshes the skill and CLI in the default global install directory and creates a config template when one does not exist.
 
 macOS / Linux:
 
