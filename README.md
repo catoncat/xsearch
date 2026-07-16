@@ -13,22 +13,38 @@
 
 ## 安装
 
+安装 skill 定义并选择你的 Agent 和安装范围：
+
 ```bash
 npx skills add catoncat/xsearch
 ```
 
-选择你的 Agent 和安装范围即可。第一次使用时，skill 会自动下载当前平台对应的发行版，并校验 SHA-256。
+正常使用不需要第二步：skill 第一次运行时会自动下载当前平台对应的发行版并校验 SHA-256。
+
+如果希望在第一次使用前完成安装和配置，可以手动运行平台安装器。它会把 skill 和 CLI 刷新到默认的全局安装目录，并在配置文件不存在时创建一份模板。
+
+macOS / Linux：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/catoncat/xsearch/main/install.sh | bash
+```
+
+Windows PowerShell：
+
+```powershell
+irm https://raw.githubusercontent.com/catoncat/xsearch/main/install.ps1 | iex
+```
 
 ## 配置
 
-首次运行会创建本地配置文件：
+CLI 安装器会自动创建本地配置文件；如果已存在则跳过：
 
 ```text
 macOS / Linux   ~/.config/xsearch/config.toml
 Windows         %APPDATA%\xsearch\config.toml
 ```
 
-填入反代地址和模型名：
+安装完成后，编辑该配置文件，填入反代地址和模型名：
 
 ```toml
 api_url = "https://your-grok-proxy.example/v1"
