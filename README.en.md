@@ -13,22 +13,36 @@
 
 ## Install
 
+First, install the skill definition and choose your agent and scope:
+
 ```bash
 npx skills add catoncat/xsearch
 ```
 
-Pick your agent and scope. On first use, the skill downloads the correct signed release binary for your platform and verifies its SHA-256 checksum.
+Then install the xsearch CLI. The installer downloads the release for your platform and verifies its SHA-256 checksum.
+
+macOS / Linux:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/catoncat/xsearch/main/install.sh | bash
+```
+
+Windows PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/catoncat/xsearch/main/install.ps1 | iex
+```
 
 ## Configure
 
-The first run creates a local config file:
+The CLI installer creates a local config file automatically and skips it if one already exists:
 
 ```text
 macOS / Linux   ~/.config/xsearch/config.toml
 Windows         %APPDATA%\xsearch\config.toml
 ```
 
-Add your proxy endpoint and model:
+After installation, edit the config file and add your proxy endpoint and model:
 
 ```toml
 api_url = "https://your-grok-proxy.example/v1"

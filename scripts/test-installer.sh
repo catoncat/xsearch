@@ -48,8 +48,13 @@ printf '\n# preserved-user-config\n' >> "$TMP/config/xsearch/config.toml"
 run_installer
 grep -q 'preserved-user-config' "$TMP/config/xsearch/config.toml"
 
-XSEARCH_INSTALL_DIR="$TMP/source-install" "$ROOT/scripts/install.sh"
+XDG_CONFIG_HOME="$TMP/source-config" XSEARCH_INSTALL_DIR="$TMP/source-install" "$ROOT/scripts/install.sh"
 test -x "$TMP/source-install/bin/xsearch"
 test -f "$TMP/source-install/SKILL.md"
 test -f "$TMP/source-install/references/runtime.md"
 test -f "$TMP/source-install/references/leaf.md"
+test -f "$TMP/source-config/xsearch/config.toml"
+
+printf '\n# preserved-source-config\n' >> "$TMP/source-config/xsearch/config.toml"
+XDG_CONFIG_HOME="$TMP/source-config" XSEARCH_INSTALL_DIR="$TMP/source-install" "$ROOT/scripts/install.sh"
+grep -q 'preserved-source-config' "$TMP/source-config/xsearch/config.toml"
