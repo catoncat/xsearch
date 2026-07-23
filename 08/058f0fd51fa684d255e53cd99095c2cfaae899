@@ -1,0 +1,19 @@
+engine/Cargo.toml
+  s_198d923ad0dc0b::t_5d1041395a5f09 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "08058f0fd51fa684d255e53cd99095c2cfaae899",
+  "prompts": {},
+  "sessions": {
+    "s_198d923ad0dc0b": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f8f6b-1256-70fb-ad8c-229d0f34bd87",
+        "model": "k3"
+      },
+      "human_author": "cat <git@chen.rs>"
+    }
+  }
+}
