@@ -1,0 +1,35 @@
+README.en.md
+  s_198d923ad0dc0b::t_883ce456a8b17f 71-79
+engine/src/main.rs
+  s_198d923ad0dc0b::t_1b4e336e876e26 5-6,19,27-30,38-100,156-158
+references/runtime.md
+  s_198d923ad0dc0b::t_d91bd0147257af 47-55
+engine/src/lib.rs
+  s_198d923ad0dc0b::t_df56446375d918 9,19
+SKILL.md
+  s_198d923ad0dc0b::t_3eda6bcd136869 111-118,121
+README.md
+  s_198d923ad0dc0b::t_7862a4d9ab4313 71-79
+engine/src/page.rs
+  s_198d923ad0dc0b::t_5f9ef734ba3749 1-293
+engine/Cargo.lock
+  s_198d923ad0dc0b::t_52b7ceca5f8f13 52-66,144-187,199-247,254-259,266-277,402-407,414-450,721-729,742-775,793-807,823-845,852-904,920-925,1032-1040,1128-1136,1184-1214,1279-1287,1294-1299,1328-1352,1390-1398,1597-1602,1717-1728,1894-1903,1910,1912
+engine/Cargo.toml
+  s_198d923ad0dc0b::t_32f4464aa4872e 28-29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "2998f5c3ba662b7cd9b46268a4f1b206ae1d8c59",
+  "prompts": {},
+  "sessions": {
+    "s_198d923ad0dc0b": {
+      "agent_id": {
+        "tool": "pi",
+        "id": "019f8f6b-1256-70fb-ad8c-229d0f34bd87",
+        "model": "k3"
+      },
+      "human_author": "cat <git@chen.rs>"
+    }
+  }
+}
