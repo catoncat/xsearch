@@ -44,6 +44,15 @@ Failed upstream calls use `info_status: failed`, never contribute to `ok`, and n
 
 The engine guarantees `requested_max_query_plan == actual_sub_queries == len(items)`. It guarantees Q count, not semantic diversity between parent routes.
 
+## Deep-read (extract)
+
+`xsearch extract <url>` fetches one page and renders its readable main content as Markdown. It needs no API configuration and no route ledger.
+
+- `--format compact|snippet|full` — render budget; default `full`. `compact` is title+URL only, `snippet` adds the first `--max-chars` of body.
+- `--max-chars N` — snippet budget, default 500.
+- The output header reports elapsed seconds, format, and the exact UTF-8 KB of the rendered body.
+- Fetch timeout is 60 seconds. Exit `0` means fetched and extracted; fetch/extraction failures print to stderr with exit `1`; usage errors exit `2`.
+
 ## Source build
 
 Repository builds use `engine/`. After cloning, run `scripts/install.sh`. End users installed through the Skill bootstrap do not need a Rust toolchain.

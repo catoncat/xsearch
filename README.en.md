@@ -68,6 +68,15 @@ query -> receipt -> manifest -> selected results
                          \-> complete report on disk
 ```
 
+## Deep-read one page
+
+When a conclusion rests on a specific page, the CLI ships an `extract` subcommand that fetches and reads it as Markdown — no API configuration needed:
+
+```bash
+xsearch extract "https://example.com/post"                    # complete content
+xsearch extract "https://example.com/post" --format snippet   # first 500 chars
+```
+
 <details>
 <summary><strong>CLI-only install</strong></summary>
 

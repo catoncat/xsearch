@@ -68,6 +68,15 @@ export XSEARCH_API_KEY="your-provider-key"
                          \-> 完整报告保存在本地
 ```
 
+## 深读单个页面
+
+结论依赖某个具体页面时，CLI 自带 `extract` 子命令抓取并提取正文（Markdown），无需任何 API 配置：
+
+```bash
+xsearch extract "https://example.com/post"                    # 完整正文
+xsearch extract "https://example.com/post" --format snippet   # 先看前 500 字符
+```
+
 <details>
 <summary><strong>只安装 CLI</strong></summary>
 

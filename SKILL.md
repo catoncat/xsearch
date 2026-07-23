@@ -108,6 +108,14 @@ Score each usable route on information gain, conflict resolution, novelty, actio
 
 Open one follow-up round only when a new entity, unresolved conflict, missing mechanism, or high-value gap could change the answer. Use the best 1–3 candidates, assign new IDs (`F1`, `F2`, ...), and repeat sections 3–5 with `round: 2`. Failed or malformed notes do not seed follow-up routes.
 
+Verify load-bearing claims before answering. When a conclusion rests on a specific page — a version number, date, price, quote, or a claim carried by a single route — deep-read that page with the same executable:
+
+```bash
+"${XSEARCH_BIN:-$HOME/.agents/skills/xsearch/bin/xsearch}" extract "<url>"
+```
+
+Use `--format snippet --max-chars 500` to peek before committing to a full page. Select 1–3 URLs from `deduped_urls`, preferring high `occurrence_count` and primary sources; do not deep-read every link. `extract` needs no API configuration. When a page contradicts a route note, trust the page and report the conflict.
+
 Stop when proposed routes are paraphrases, results repeat, or the question is answered. Respond with conclusions first, then important conflicts/gaps and a few useful links. Keep N/Q terminology internal unless the user asks about execution.
 
-**Complete when:** the final answer is backed by the closed ledger, preserves material conflicts/gaps, and does not dump leaf transcripts.
+**Complete when:** the final answer is backed by the closed ledger, load-bearing claims are deep-read or explicitly labeled unverified, material conflicts/gaps are preserved, and no leaf transcripts are dumped.
