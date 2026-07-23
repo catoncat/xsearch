@@ -2,8 +2,8 @@ use std::io::IsTerminal;
 use std::path::PathBuf;
 use std::process::ExitCode;
 use xsearch::{
-    default_artifact_root, load_resolved, persist_report, run_search, HttpChatUpstream,
-    SearchRequest,
+    default_artifact_root, fetch_page, load_resolved, persist_report, render_page, run_search,
+    HttpChatUpstream, PageFormat, SearchRequest, DEFAULT_MAX_CHARS,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -16,6 +16,7 @@ enum OutputMode {
 
 fn print_usage() {
     println!("usage: xsearch [--json|--human|--full] \"<query>\" [Q]");
+    println!("       xsearch extract <url> [--format compact|snippet|full] [--max-chars N]");
     println!();
     println!("output:");
     println!("  default  human receipt in a terminal; JSON receipt when piped");
@@ -23,11 +24,78 @@ fn print_usage() {
     println!("  --human  print the aligned human receipt");
     println!("  --full   print the complete retrieval report to stdout");
     println!();
+    println!("extract:");
+    println!("  deep-read one URL (readable content as Markdown); default --format full,");
+    println!("  --max-chars {DEFAULT_MAX_CHARS}; needs no API configuration");
+    println!();
     println!("config (defaults < file < env):");
     println!("  file: $XSEARCH_CONFIG, ~/.config/xsearch, or %APPDATA%\\xsearch");
     println!("  env:  XSEARCH_API_URL, XSEARCH_API_KEY, XSEARCH_MODEL,");
     println!("        XSEARCH_ANALYSIS_MODEL, XSEARCH_TIMEOUT,");
     println!("        XSEARCH_ARTIFACT_DIR, XSEARCH_LOG_DIR");
+}
+
+fn extract_usage_error() -> ! {
+    eprintln!("usage: xsearch extract <url> [--format compact|snippet|full] [--max-chars N]");
+    std::process::exit(2);
+}
+
+/// `xsearch extract <url>`: deep-read one page; standalone (no API config).
+async fn run_extract(args: &[String]) -> ExitCode {
+    let mut format = PageFormat::Full;
+    let mut max_chars = DEFAULT_MAX_CHARS;
+    let mut url: Option<String> = None;
+
+    let mut i = 0;
+    while i < args.len() {
+        let arg = args[i].as_str();
+        if arg == "--format" {
+            i += 1;
+            format = match args.get(i).and_then(|v| PageFormat::parse(v)) {
+                Some(f) => f,
+                None => extract_usage_error(),
+            };
+        } else if let Some(v) = arg.strip_prefix("--format=") {
+            format = match PageFormat::parse(v) {
+                Some(f) => f,
+                None => extract_usage_error(),
+            };
+        } else if arg == "--max-chars" {
+            i += 1;
+            max_chars = match args.get(i).and_then(|v| v.parse().ok()) {
+                Some(n) => n,
+                None => extract_usage_error(),
+            };
+        } else if let Some(v) = arg.strip_prefix("--max-chars=") {
+            max_chars = match v.parse() {
+                Ok(n) => n,
+                Err(_) => extract_usage_error(),
+            };
+        } else if arg.starts_with("--") {
+            extract_usage_error();
+        } else if url.is_none() {
+            url = Some(arg.to_string());
+        } else {
+            extract_usage_error();
+        }
+        i += 1;
+    }
+
+    let url = match url {
+        Some(u) => u,
+        None => extract_usage_error(),
+    };
+
+    match fetch_page(&url).await {
+        Ok(page) => {
+            println!("{}", render_page(&page, format, max_chars));
+            ExitCode::SUCCESS
+        }
+        Err(error) => {
+            eprintln!("xsearch: {error}");
+            ExitCode::from(1)
+        }
+    }
 }
 
 fn usage_error() -> ! {
@@ -84,6 +152,9 @@ async fn main() -> ExitCode {
     if args.len() == 1 && matches!(args[0].as_str(), "-V" | "--version") {
         println!("xsearch {}", env!("CARGO_PKG_VERSION"));
         return ExitCode::SUCCESS;
+    }
+    if args[0] == "extract" {
+        return run_extract(&args[1..]).await;
     }
 
     let output_mode = parse_output_mode(&mut args);

@@ -1,6 +1,6 @@
 [package]
 name = "xsearch"
-version = "0.1.5"
+version = "0.2.0"
 edition = "2021"
 description = "One-shot structured web search CLI for OpenAI-compatible Grok endpoints"
 license = "MIT"
@@ -25,6 +25,8 @@ serde_json = "1"
 thiserror = "2"
 toml = "0.8"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
+dom_smoothie = "0.18.0"
+htmd = "0.5.4"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
